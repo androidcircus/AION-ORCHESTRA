@@ -1,1 +1,2 @@
 - [OpenAPI and Zod compatibility](openapi-zod-compatibility.md) — this workspace's current Zod runtime is incompatible with Orval's generated `zod.int()` helper.
+- [GitHub PAT push](github-pat-push.md) — GitHub API Bearer auth can work while Git transport requires Basic auth with the token.
