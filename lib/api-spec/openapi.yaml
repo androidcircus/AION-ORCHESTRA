@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: songs
+    description: Generated tracks and music workspace operations
+  - name: workspace
+    description: Workspace summaries
 paths:
   /healthz:
     get:
@@ -24,6 +28,95 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /songs:
+    get:
+      operationId: listSongs
+      tags: [songs]
+      summary: List generated songs
+      description: Returns the newest tracks in the current music workspace.
+      responses:
+        "200":
+          description: Song list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Song"
+  /songs/generate:
+    post:
+      operationId: generateSong
+      tags: [songs]
+      summary: Start generating a song
+      description: Creates a track generation job from a prompt and optional lyrics.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateSongInput"
+      responses:
+        "202":
+          description: Generation job accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Song"
+        "400":
+          description: Invalid generation request
+  /songs/{songId}:
+    get:
+      operationId: getSong
+      tags: [songs]
+      summary: Get a generated song
+      parameters:
+        - name: songId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Song details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Song"
+        "404":
+          description: Song not found
+  /songs/{songId}/favorite:
+    patch:
+      operationId: toggleSongFavorite
+      tags: [songs]
+      summary: Toggle a song favorite
+      parameters:
+        - name: songId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Updated song
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Song"
+        "404":
+          description: Song not found
+  /workspace/summary:
+    get:
+      operationId: getWorkspaceSummary
+      tags: [workspace]
+      summary: Get workspace summary
+      description: Returns lightweight counts and the current generation activity.
+      responses:
+        "200":
+          description: Workspace summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceSummary"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +126,118 @@ components:
           type: string
       required:
         - status
+    Song:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        prompt:
+          type: string
+        lyrics:
+          type: ["string", "null"]
+        style:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        duration:
+          type: number
+        bpm:
+          type: number
+        musicalKey:
+          type: string
+        status:
+          type: string
+          enum: [queued, generating, completed, failed]
+        progress:
+          type: number
+        stage:
+          type: string
+        model:
+          type: string
+        audioUrl:
+          type: ["string", "null"]
+        coverHue:
+          type: number
+        isFavorite:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - prompt
+        - lyrics
+        - style
+        - tags
+        - duration
+        - bpm
+        - musicalKey
+        - status
+        - progress
+        - stage
+        - model
+        - audioUrl
+        - coverHue
+        - isFavorite
+        - createdAt
+    GenerateSongInput:
+      type: object
+      properties:
+        prompt:
+          type: string
+          minLength: 3
+        lyrics:
+          type: string
+        style:
+          type: string
+          minLength: 1
+        duration:
+          type: number
+          minimum: 15
+          maximum: 240
+        instrumental:
+          type: boolean
+        energy:
+          type: number
+          minimum: 0
+          maximum: 100
+        model:
+          type: string
+          enum: [AION Demo Engine, ACE-Step 1.5, YuE]
+      required:
+        - prompt
+        - style
+        - duration
+        - instrumental
+        - energy
+        - model
+    WorkspaceSummary:
+      type: object
+      properties:
+        totalSongs:
+          type: number
+        completedSongs:
+          type: number
+        minutesCreated:
+          type: number
+        favoriteCount:
+          type: number
+        activeGenerations:
+          type: number
+        latestSong:
+          oneOf:
+            - $ref: "#/components/schemas/Song"
+            - type: "null"
+      required:
+        - totalSongs
+        - completedSongs
+        - minutesCreated
+        - favoriteCount
+        - activeGenerations
+        - latestSong
 

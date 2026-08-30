@@ -1,6 +1,6 @@
-# [Project name]
+# AION Orchestra
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A music creation workspace that turns prompts and lyrics into playable tracks, with a generation queue and an AION CORE-ready workflow.
 
 ## Run & Operate
 
@@ -22,23 +22,33 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/aion-orchestra/src/App.tsx` — composer workspace, generation progress, archive, and playback UI
+- `artifacts/api-server/src/routes/songs.ts` — generation, workspace summary, favorites, and demo audio endpoints
+- `lib/api-spec/openapi.yaml` — source of truth for the music workspace API
+- `lib/db/src/schema/songs.ts` — Drizzle schema for generated song sessions
+- `artifacts/aion-orchestra/src/index.css` — AION Orchestra visual tokens and motion
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- The first release uses an in-process AION Demo Engine that produces a deterministic playable WAV while keeping the model selection contract ready for ACE-Step and YuE adapters.
+- Song metadata is persisted in PostgreSQL; audio is rendered on demand from the completed session so the demo does not depend on a separate storage bucket.
+- The frontend uses generated React Query hooks from the OpenAPI contract and polls active sessions until they complete.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Compose tracks from a natural-language prompt, style, length, energy, optional lyrics, and model choice.
+- Watch queued generations progress through motif, arrangement, and finalization stages.
+- Play completed tracks, browse recent sessions, and favorite tracks.
+- See workspace totals for tracks, playable cuts, minutes created, favorites, and active generations.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+No standing preferences recorded.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- After changing `lib/api-spec/openapi.yaml`, run `pnpm --filter @workspace/api-spec run codegen` before checking app packages.
+- The current workspace validation package does not support generated `zod.int()` helpers; use numeric OpenAPI fields unless the Zod dependency is upgraded in a coordinated change.
 
 ## Pointers
 

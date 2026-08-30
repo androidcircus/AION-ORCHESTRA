@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "AION Orchestra"
+description = "A music creation workspace for turning prompts, lyrics, and vocal ideas into playable tracks, with a production queue and AION CORE-ready generation workflow."
+version = "1.0.0"
+id = "artifacts/aion-orchestra"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24105
+
+[services.development]
+run = "pnpm --filter @workspace/aion-orchestra run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aion-orchestra", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/aion-orchestra/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24105"
+BASE_PATH = "/"

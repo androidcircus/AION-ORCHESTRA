@@ -1,0 +1,1 @@
+- [OpenAPI and Zod compatibility](openapi-zod-compatibility.md) — this workspace's current Zod runtime is incompatible with Orval's generated `zod.int()` helper.
