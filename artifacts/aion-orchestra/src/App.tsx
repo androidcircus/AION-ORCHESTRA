@@ -12,6 +12,7 @@ import {
   Heart,
   Info,
   Layers3,
+  Mic2,
   Menu,
   Music2,
   Pause,
@@ -51,6 +52,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
+import { LibraryPage, StudioPage } from '@/pages/voice-to-instrument';
 import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 
 const queryClient = new QueryClient();
@@ -145,6 +147,7 @@ function Waveform({ compact = false, active = false }: { compact?: boolean; acti
 }
 
 function SideRail({ activeGenerations }: { activeGenerations: number }) {
+  const performPath = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/perform`;
   return (
     <aside className="hidden min-h-[100dvh] w-[250px] shrink-0 flex-col bg-[#1b1f29] text-[#f4f1ea] lg:flex">
       <div className="flex items-center gap-3 border-b border-[#f4f1ea]/10 px-7 py-6">
@@ -173,6 +176,10 @@ function SideRail({ activeGenerations }: { activeGenerations: number }) {
             Studio signal
             {activeGenerations > 0 && <span className="ml-auto rounded-full bg-[#2b59ff] px-1.5 py-0.5 font-mono text-[9px] text-white">{activeGenerations}</span>}
           </a>
+          <a href={performPath} className="aion-focus flex items-center gap-3 rounded-md px-3 py-3 text-sm text-[#f4f1ea]/65 transition-colors hover:bg-[#f4f1ea]/8 hover:text-[#f4f1ea]" data-testid="link-voice-studio">
+            <Mic2 className="h-4 w-4" />
+            Voice studio
+          </a>
         </nav>
       </div>
       <div className="mt-auto border-t border-[#f4f1ea]/10 px-7 py-6">
@@ -196,6 +203,7 @@ function SideRail({ activeGenerations }: { activeGenerations: number }) {
 
 function MobileHeader({ activeGenerations }: { activeGenerations: number }) {
   const [isOpen, setIsOpen] = useState(false);
+  const performPath = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/perform`;
   return (
     <header className="relative flex items-center justify-between border-b border-[#d5d0c5] bg-[#f4f1ea] px-5 py-4 lg:hidden">
       <div className="flex items-center gap-2.5">
@@ -211,6 +219,7 @@ function MobileHeader({ activeGenerations }: { activeGenerations: number }) {
           <a href="#compose" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-3 text-xs font-semibold" data-testid="link-mobile-compose"><WandSparkles className="h-4 w-4 text-[#ff6542]" /> Compose</a>
           <a href="#creations" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-3 text-xs font-semibold" data-testid="link-mobile-creations"><Disc3 className="h-4 w-4 text-[#2b59ff]" /> Creations</a>
           <a href="#signal" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-3 text-xs font-semibold" data-testid="link-mobile-signal"><Activity className="h-4 w-4 text-[#2b59ff]" /> Studio signal</a>
+          <a href={performPath} onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-3 text-xs font-semibold" data-testid="link-mobile-voice-studio"><Mic2 className="h-4 w-4 text-[#ff6542]" /> Voice studio</a>
         </nav>
       )}
     </header>
@@ -585,6 +594,8 @@ function Router() {
     <RoutedErrorBoundary>
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/perform" component={StudioPage} />
+        <Route path="/perform/library" component={LibraryPage} />
         <Route component={NotFound} />
       </Switch>
     </RoutedErrorBoundary>

@@ -23,6 +23,8 @@ A music creation workspace that turns prompts and lyrics into playable tracks, w
 ## Where things live
 
 - `artifacts/aion-orchestra/src/App.tsx` — composer workspace, generation progress, archive, and playback UI
+- `artifacts/aion-orchestra/src/pages/voice-to-instrument.tsx` — voice-to-instrument studio and saved performance library
+- `artifacts/aion-orchestra/src/pages/voice-to-instrument.css` — dark voice performance workspace styling
 - `artifacts/api-server/src/routes/songs.ts` — generation, workspace summary, favorites, and demo audio endpoints
 - `lib/api-spec/openapi.yaml` — source of truth for the music workspace API
 - `lib/db/src/schema/songs.ts` — Drizzle schema for generated song sessions
@@ -40,6 +42,7 @@ A music creation workspace that turns prompts and lyrics into playable tracks, w
 - Watch queued generations progress through motif, arrangement, and finalization stages.
 - Play completed tracks, browse recent sessions, and favorite tracks.
 - See workspace totals for tracks, playable cuts, minutes created, favorites, and active generations.
+- Open `/perform` for the voice-to-instrument workspace; saved performances are available at `/perform/library`.
 
 ## User preferences
 
