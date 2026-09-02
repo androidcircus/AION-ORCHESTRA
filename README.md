@@ -19,16 +19,27 @@ AION ORCHESTRA - A Cyberpunk Nebula Music Creation Suite. Featuring generative R
     - **Studio Stems Export:** High-quality stereo WAVs ready for Audacity/Ableton.
     - **Advanced DSP:** Algorithmic reverb, sidechain ducking, Tilt EQ, and master limiting.
 
-## Nebula Mobile Bridge (APK)
-AION Orchestra is hybrid-ready.
-- **GitHub Automation:** Every push to `main` or `master` triggers a GitHub Action that builds a fresh **Nebula APK**.
-- **Local Sync:** Run `pnpm --filter @workspace/aion-orchestra run mobile:sync` to sync the web app to the Android project.
-    - *Note:* If running for the first time, you may need to run `npx cap add android` inside `artifacts/aion-orchestra/`.
-- **Local Build:** Use Android Studio to open the `artifacts/aion-orchestra/android` folder (after running sync) to build and run on your device.
+## Multi-Platform Bridge (Android, PC, iOS)
+AION Orchestra is fully hybrid-ready for mobile and desktop.
 
-## GitHub Integration
-- **Branch Tracking:** The `AION NEBULA - Mobile Sync & Build` workflow ensures that your GitHub repo always stays updated with a verified build.
-- **Artifacts:** Access the latest built APK directly from your GitHub Actions dashboard.
+### Android (APK)
+- **Local Sync:** Run `pnpm --filter @workspace/aion-orchestra run mobile:sync`.
+- **Local Build:** Open `artifacts/aion-orchestra/android` in Android Studio and run `./gradlew assembleDebug`.
+
+### Windows (PC EXE)
+- **Local Sync:** Run `pnpm --filter @workspace/aion-orchestra run desktop:sync`.
+- **Local Build:** Run `pnpm --filter @workspace/aion-orchestra run desktop:open` to preview, or use Electron Builder to package.
+
+### iOS & Mac (iPhone/macOS)
+- **Local Sync:** Run `pnpm --filter @workspace/aion-orchestra run mobile:sync:ios`.
+- **Local Build:** Open `artifacts/aion-orchestra/ios/App` in Xcode. (Requires macOS).
+
+## GitHub Automation
+- **Multi-Platform Build:** Every push to `main` triggers a GitHub Action that generates:
+    - **Nebula APK** (Android)
+    - **Nebula EXE** (Windows PC)
+    - **Nebula App** (iOS Debug)
+- **Artifacts:** Access the latest builds directly from your GitHub Actions dashboard.
 
 ## Directory Structure
 - `artifacts/aion-orchestra/src/App.tsx`: Cyberpunk Producer Workspace.

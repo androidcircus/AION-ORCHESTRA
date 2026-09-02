@@ -9,7 +9,11 @@
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "mobile:sync": "vite build && cap sync android",
-    "mobile:open": "cap open android"
+    "mobile:sync:ios": "vite build && cap sync ios",
+    "desktop:sync": "vite build && cap sync electron",
+    "mobile:open": "cap open android",
+    "mobile:open:ios": "cap open ios",
+    "desktop:open": "cap open electron"
   },
   "devDependencies": {
     "@capacitor/cli": "^6.0.0",
@@ -77,6 +81,8 @@
     "wouter": "^3.3.5",
     "zod": "catalog:",
     "@capacitor/core": "^6.0.0",
-    "@capacitor/android": "^6.0.0"
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
+    "@capacitor-community/electron": "^5.0.0"
   }
 }

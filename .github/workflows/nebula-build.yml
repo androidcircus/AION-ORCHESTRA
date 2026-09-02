@@ -1,4 +1,4 @@
-name: AION NEBULA - Mobile Sync & Build
+name: AION NEBULA - Multi-Platform Build
 
 on:
   push:
@@ -7,44 +7,94 @@ on:
     branches: [ main, master ]
 
 jobs:
-  build:
+  build-android:
+    name: Build Android APK
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
-
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '22'
-
     - name: Install pnpm
       run: npm install -g pnpm
-
     - name: Install Dependencies
       run: pnpm install
-
     - name: Build AION Core
       run: pnpm build
-
-    - name: Initialize Nebula Mobile Bridge
+    - name: Sync Android
       working-directory: artifacts/aion-orchestra
       run: |
         if [ ! -d "android" ]; then npx cap add android; fi
         npx cap sync android
-
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'zulu'
-
-    - name: Build Android APK
+    - name: Build APK
       working-directory: artifacts/aion-orchestra/android
       run: ./gradlew assembleDebug
-
-    - name: Upload Nebula APK
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: AION-Orchestra-Nebula-Alpha
+        name: AION-Orchestra-Nebula-APK
         path: artifacts/aion-orchestra/android/app/build/outputs/apk/debug/app-debug.apk
+
+  build-pc:
+    name: Build Windows EXE
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+    - name: Install pnpm
+      run: npm install -g pnpm
+    - name: Install Dependencies
+      run: pnpm install
+    - name: Build AION Core
+      run: pnpm build
+    - name: Sync Electron
+      working-directory: artifacts/aion-orchestra
+      run: |
+        if [ ! -d "electron" ]; then npx cap add electron; fi
+        npx cap sync electron
+    - name: Build EXE
+      working-directory: artifacts/aion-orchestra/electron
+      run: npm run electron:make
+    - name: Upload EXE
+      uses: actions/upload-artifact@v4
+      with:
+        name: AION-Orchestra-Win-EXE
+        path: artifacts/aion-orchestra/electron/out/make/**/*.exe
+
+  build-apple:
+    name: Build iOS & Mac (Prep)
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+    - name: Install pnpm
+      run: npm install -g pnpm
+    - name: Install Dependencies
+      run: pnpm install
+    - name: Build AION Core
+      run: pnpm build
+    - name: Sync iOS
+      working-directory: artifacts/aion-orchestra
+      run: |
+        if [ ! -d "ios" ]; then npx cap add ios; fi
+        npx cap sync ios
+    - name: Build iOS App
+      working-directory: artifacts/aion-orchestra/ios/App
+      run: xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Debug build CODE_SIGNING_ALLOWED=NO
+    - name: Upload iOS Build
+      uses: actions/upload-artifact@v4
+      with:
+        name: AION-Orchestra-iOS-Debug
+        path: artifacts/aion-orchestra/ios/App/build/Debug-iphoneos/*.app
