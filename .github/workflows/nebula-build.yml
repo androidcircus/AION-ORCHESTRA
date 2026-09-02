@@ -110,3 +110,34 @@ jobs:
       with:
         name: AION-Orchestra-iOS-Debug
         path: artifacts/aion-orchestra/ios/App/build/Debug-iphoneos/*.app
+
+  release:
+    name: Create GitHub Release
+    needs: [build-android, build-pc, build-apple]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+    - name: Download Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: release-assets
+        merge-multiple: true
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: nebula-latest
+        name: AION Orchestra - Nebula Alpha (Latest)
+        body: |
+          Automated build from Nebula Core.
+          
+          **Sync Status:** Real-time link established.
+          **Core Version:** 4.2.${{ github.run_number }}
+        draft: false
+        prerelease: true
+        files: |
+          release-assets/**/*.apk
+          release-assets/**/*.exe
+          release-assets/**/*.app
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

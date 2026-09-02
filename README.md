@@ -34,6 +34,13 @@ AION Orchestra is fully hybrid-ready for mobile and desktop.
 - **Local Sync:** Run `pnpm --filter @workspace/aion-orchestra run mobile:sync:ios`.
 - **Local Build:** Open `artifacts/aion-orchestra/ios/App` in Xcode. (Requires macOS).
 
+## Downloads (Latest Alpha)
+Access the latest public builds directly from GitHub:
+
+- 📱 [**Android APK**](https://github.com/androidcircus/AION-ORCHESTRA/releases/latest/download/app-debug.apk)
+- 💻 [**Windows EXE**](https://github.com/androidcircus/AION-ORCHESTRA/releases/latest/download/AION-Orchestra-Setup.exe)
+- 🍎 [**iOS/macOS App**](https://github.com/androidcircus/AION-ORCHESTRA/releases/latest) (Requires Xcode/macOS)
+
 ## GitHub Automation
 - **Multi-Platform Build:** Every push to `main` triggers a GitHub Action that generates:
     - **Nebula APK** (Android)
