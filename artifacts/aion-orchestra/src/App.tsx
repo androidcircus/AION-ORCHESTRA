@@ -70,11 +70,14 @@ import { LibraryPage, StudioPage } from '@/pages/voice-to-instrument';
 import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import { useNeuralSync } from '@/hooks/use-neural-sync';
 import { useNativeSave } from '@/hooks/use-native-save';
-import { Share2 } from 'lucide-react';
 
 const queryClient = new QueryClient();
 
-const STYLE_PRESETS = ['Alt R&B', 'Lo-fi house', 'Cinematic pop', 'Indie electronica', 'Ambient jazz'];
+const STYLE_PRESETS = [
+  'Drum and Bass', 'Dubstep', 'Rap', 'House', 'Dance',
+  'Country', 'R&B', 'Jazz', 'Bluegrass', 'Hip Hop',
+  'Trap', 'Rock', 'Heavy Metal', 'Bardcore'
+];
 const MODEL_OPTIONS = [
   { value: GenerateSongInputModel.AION_Core_Ideation, note: 'Fast ideation' },
   { value: GenerateSongInputModel.Soundraw_Studio_Stems, note: 'Detailed texture' },
@@ -836,21 +839,6 @@ function LatestSong({ song, nebulaRef }: { song: Song; nebulaRef: React.RefObjec
     try {
       const videoBlob = await nebulaRef.current.startBroadcast(song.audioUrl);
       await shareFile(videoBlob, `${song.title.replace(/\s+/g, '_')}_Nebula.webm`, song.title, `Check out my latest creation on AION Orchestra: ${song.prompt}`);
-    } finally {
-      setIsBroadcasting(false);
-    }
-  }
-        title: "Broadcast Captured",
-        description: "Your video has been saved to your downloads.",
-        variant: "default",
-      });
-    } catch (e) {
-      console.error('Broadcast failed', e);
-      toast({
-        title: "Link Terminated",
-        description: "Nebula failed to capture the broadcast. Try again.",
-        variant: "destructive",
-      });
     } finally {
       setIsBroadcasting(false);
     }

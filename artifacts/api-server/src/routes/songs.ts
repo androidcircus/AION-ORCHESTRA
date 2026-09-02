@@ -173,6 +173,23 @@ function tagsFor(style: string, prompt: string) {
     ["rap", "rap"],
     ["rock", "rock"],
     ["pop", "pop"],
+    ["dnb", "drum and bass"],
+    ["dubstep", "dubstep"],
+    ["house", "house"],
+    ["dance", "dance"],
+    ["country", "country"],
+    ["bluegrass", "bluegrass"],
+    ["trap", "trap"],
+    ["metal", "heavy metal"],
+    ["bardcore", "bardcore"],
+    ["r&b", "r&b"],
+    ["trap", "trap"],
+    ["dnb", "drum and bass"],
+    ["dubstep", "dubstep"],
+    ["house", "house"],
+    ["dance", "dance"],
+    ["bluegrass", "bluegrass"],
+    ["country", "country"],
     ["lo-fi", "lo-fi"],
     ["lofi", "lo-fi"],
   ];
@@ -517,8 +534,13 @@ router.get("/audio/:songId", async (req, res) => {
     const buchla = new BuchlaNode();
     const harpsichord = new HarpsichordNode();
     const khlui = new KhluiNode();
+    const metalGuitar = new HeavyMetalGuitar();
+    const banjo = new BanjoNode();
+    const wobble = new WobbleBass();
 
     guitar.init(root * 2, sampleRate);
+    metalGuitar.init(root * 2, sampleRate);
+    banjo.init(root * 3, sampleRate);
 
     // Preset Overrides
     let drive = 1.8 + (seed % 10) / 5;
@@ -590,6 +612,30 @@ router.get("/audio/:songId", async (req, res) => {
       stereoWidth = 0.95;
       revMix = 0.2;
       duckMix = 0.0;
+    } else if (song.warmthPreset === "Drum and Bass") {
+      drive = 4.5;
+      lpfCutoff = 0.45;
+      revMix = 0.15;
+      duckMix = 0.4;
+      stereoWidth = 1.1;
+    } else if (song.warmthPreset === "Dubstep") {
+      drive = 8.0;
+      lpfCutoff = 0.35;
+      revMix = 0.3;
+      duckMix = 0.5;
+      stereoWidth = 1.4;
+    } else if (song.warmthPreset === "Heavy Metal") {
+      drive = 10.0;
+      lpfCutoff = 0.6;
+      revMix = 0.2;
+      duckMix = 0.0;
+      stereoWidth = 1.2;
+    } else if (song.warmthPreset === "Bardcore") {
+      drive = 1.5;
+      lpfCutoff = 0.8;
+      revMix = 0.5;
+      duckMix = 0.0;
+      stereoWidth = 1.3;
     }
 
     lpfL.setCutoff(lpfCutoff);
@@ -640,6 +686,10 @@ router.get("/audio/:songId", async (req, res) => {
         snare.process(stepTime, snareTrigger) * 0.5 +
         hats.process(stepTime, hatTrigger) * 0.2;
 
+      // Bass Package logic (Sub Bass and Wobble)
+      const subBassDrive = (song.warmthPreset === "Drum and Bass" || song.warmthPreset === "Dubstep" || song.warmthPreset === "Trap") ? 0.8 : 0.4;
+      const subBassSample = Math.sin(time * Math.PI * 2 * (root / 4)) * subBassDrive;
+
       // Generative Instrument Arrangement based on Preset
       let instrumentSample = 0;
       if (song.warmthPreset === "Techno Pulse") {
@@ -647,13 +697,27 @@ router.get("/audio/:songId", async (req, res) => {
       } else if (song.warmthPreset === "Lo-Fi Hip Hop") {
         instrumentSample = melody * 0.3 + subBass * 0.4 + drumSample * 0.6 + atmosphere + vocalSample * 0.4 + guitarLayer + harpsichordLayer;
       } else if (song.warmthPreset === "Vintage Soul") {
-        instrumentSample = epiano.process(time % 2, root) * 0.5 + subBass * 0.5 + drumSample * 0.4 + vocalSample * 0.5 + khluiLayer + worldPerc.process(stepTime, kickTrigger) * 0.25;
+        instrumentSample = epiano.process(time % 2, root) * 0.5 + subBass * 0.5 + drumSample * 0.4 + vocalSample * 0.5 + khluiLayer + (worldPerc ? worldPerc.process(stepTime, kickTrigger) * 0.25 : 0);
       } else if (song.warmthPreset === "Cinematic Orchestral") {
         instrumentSample = stradLayer + brassLayer + pad.process(time, root, sampleRate) * 0.4 + vocalSample * 0.3 + crystalLayer;
       } else if (song.warmthPreset === "Dream Pop") {
         instrumentSample = pad.process(time, root, sampleRate) * 0.6 + fluteLayer + atmosphere + vocalSample * 0.3 + crystalLayer;
+      } else if (song.warmthPreset === "Drum and Bass") {
+        instrumentSample = wobble.process(time, root / 2, 8) * 0.6 + drumSample * 0.8 + vocalSample * 0.2 + subBassSample;
+      } else if (song.warmthPreset === "Dubstep") {
+        instrumentSample = wobble.process(time, root / 4, 4) * 0.7 + drumSample * 0.6 + vocalSample * 0.3 + subBassSample;
+      } else if (song.warmthPreset === "Heavy Metal") {
+        instrumentSample = metalGuitar.process() * 0.6 + brassLayer * 0.4 + drumSample * 0.5 + subBassSample * 0.2;
+      } else if (song.warmthPreset === "Bardcore") {
+        instrumentSample = harpsichordLayer + fluteLayer + vocalSample * 0.4 + strings.process(time % 4, root * 1.5, 'violin') * 0.3;
+      } else if (song.style.toLowerCase().includes("trap")) {
+        instrumentSample = synth808.process(time % (60/song.bpm), true, 60) * 0.6 + drumSample * 0.7 + vocalSample * 0.4 + subBassSample * 0.5;
+      } else if (song.style.toLowerCase().includes("bluegrass")) {
+        instrumentSample = banjo.process() * 0.5 + fluteLayer * 0.3 + (worldPerc ? worldPerc.process(stepTime, kickTrigger) * 0.2 : 0) + strings.process(time % 4, root, 'violin') * 0.4;
       } else {
-        instrumentSample = (melody + subBass + grit + atmosphere + drumSample * 0.3 + vocalSample * 0.5 + stradLayer + worldPerc.process(stepTime, kickTrigger) * 0.2);
+        instrumentSample = (melody + subBass + grit + atmosphere + drumSample * 0.3 + vocalSample * 0.5 + stradLayer + (worldPerc ? worldPerc.process(stepTime, kickTrigger) * 0.2 : 0) + subBassSample * 0.3);
+      }
+erc.process(stepTime, kickTrigger) * 0.2);
       }
 
       const rawSample = instrumentSample * pulse * 0.7; // Scaled to prevent clipping

@@ -65,6 +65,10 @@ export const GenerateSongInputWarmthPreset = {
   Techno_Pulse: 'Techno Pulse',
   Dream_Pop: 'Dream Pop',
   Vintage_Soul: 'Vintage Soul',
+  Drum_and_Bass: 'Drum and Bass',
+  Dubstep: 'Dubstep',
+  Heavy_Metal: 'Heavy Metal',
+  Bardcore: 'Bardcore',
 } as const;
 
 export interface GenerateSongInput {

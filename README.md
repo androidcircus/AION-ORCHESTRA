@@ -14,6 +14,10 @@ AION ORCHESTRA - A Cyberpunk Nebula Music Creation Suite. Featuring generative R
     - **Tilt EQ:** Analog-style tone balance for instant frequency shaping.
     - **Master Limiter:** Professional-grade safety ceiling to prevent clipping.
     - **Core Engine Selector:** Switch between different signature shaper models.
+- **AION Bass Package (New):**
+    - **Wobble Bass:** LFO-modulated resonant filters for Dubstep/DnB.
+    - **Trap 808:** Decaying sub-harmonics with aggressive saturation.
+    - **Sub-Neural Bed:** Constant low-frequency reinforcement for heavy genres.
 - **AION Core Engine 4.2 (Cloud):**
     - **Neural Refinement:** Soundraw-style remixing for Energy, Warmth, and Style.
     - **Studio Stems Export:** High-quality stereo WAVs ready for Audacity/Ableton.

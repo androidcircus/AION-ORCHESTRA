@@ -449,6 +449,74 @@ export class StradivariusNode {
 }
 
 /**
+ * HEAVY-METAL-GUITAR: High-gain distorted string model.
+ */
+export class HeavyMetalGuitar {
+  private buffer: Float32Array = new Float32Array(1024);
+  private pos: number = 0;
+
+  init(frequency: number, sampleRate: number) {
+    const size = Math.floor(sampleRate / frequency);
+    this.buffer = new Float32Array(size);
+    for(let i=0; i<size; i++) this.buffer[i] = Math.random() * 2 - 1;
+  }
+
+  process(): number {
+    const val = this.buffer[this.pos];
+    const nextPos = (this.pos + 1) % this.buffer.length;
+    const nextVal = this.buffer[nextPos];
+    const out = (val + nextVal) * 0.5 * 0.998;
+    this.buffer[this.pos] = out;
+    this.pos = nextPos;
+    // Distortion / High Gain
+    return Math.tanh(out * 5.0) * 0.4;
+  }
+}
+
+/**
+ * BANJO-NODE: Sharp, bright bluegrass pluck.
+ */
+export class BanjoNode {
+  private buffer: Float32Array = new Float32Array(1024);
+  private pos: number = 0;
+
+  init(frequency: number, sampleRate: number) {
+    const size = Math.floor(sampleRate / frequency);
+    this.buffer = new Float32Array(size);
+    for(let i=0; i<size; i++) this.buffer[i] = (Math.random() * 2 - 1) * 0.8;
+  }
+
+  process(): number {
+    const val = this.buffer[this.pos];
+    const nextPos = (this.pos + 1) % this.buffer.length;
+    const nextVal = this.buffer[nextPos];
+    const out = (val + nextVal) * 0.5 * 0.985; // Faster decay for banjo
+    this.buffer[this.pos] = out;
+    this.pos = nextPos;
+    return out * 0.6;
+  }
+}
+
+/**
+ * AION BASS PACKAGE
+ * Specialized low-frequency oscillators and sub-harmonic generators.
+ */
+
+/**
+ * WOBBLE-BASS: Dubstep/DnB modulated bass.
+ */
+export class WobbleBass {
+  process(time: number, frequency: number, rate: number = 4): number {
+    const lfo = Math.sin(time * Math.PI * 2 * rate) * 0.5 + 0.5;
+    const saw = ((time * frequency) % 1.0) * 2 - 1;
+    // Resonant filter sweep
+    const cutoff = 0.1 + lfo * 0.6;
+    const q = 0.8;
+    return Math.tanh(saw * cutoff * 10) * 0.4;
+  }
+}
+
+/**
  * MADISON-CRYSTAL: James Madison's 1813 Crystal Flute.
  * Pure, leaded-glass transparency with ethereal "shimmer."
  */
