@@ -67,6 +67,7 @@ import { useToast } from '@/hooks/use-toast';
 import NotFound from '@/pages/not-found';
 import { LibraryPage, StudioPage } from '@/pages/voice-to-instrument';
 import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
+import { useNeuralSync } from '@/hooks/use-neural-sync';
 
 const queryClient = new QueryClient();
 
@@ -870,6 +871,7 @@ function Timeline({ projects, onUpdate }: { projects: any[]; onUpdate: (id: stri
 function Home() {
   const summaryQuery = useGetWorkspaceSummary({ query: { queryKey: getGetWorkspaceSummaryQueryKey(), refetchInterval: 5000 } });
   const healthQuery = useHealthCheck({ query: { queryKey: getHealthCheckQueryKey(), refetchInterval: 30000 } });
+  const { updateAvailable, latestVersion, isChecking, applyUpdate } = useNeuralSync();
   const summary = summaryQuery.data;
   const activeGenerations = summary?.activeGenerations ?? 0;
   const [seedIdea, setSeedIdea] = useState<{ prompt: string; style: string } | undefined>();
@@ -887,9 +889,19 @@ function Home() {
                 <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[.18em] text-accent neon-text"><span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" /> [SYNC_OK] Signal established</div>
                 <p className="mt-2 text-sm text-foreground/60">Autonomous Logic Node v4.2. Ready for synthesis, Ari.</p>
               </div>
-              <div className="hidden items-center gap-2 rounded-full border border-border bg-card/40 px-3 py-2 font-mono text-[9px] uppercase tracking-[.12em] text-foreground/60 sm:flex shadow-[0_0_10px_rgba(0,35,255,0.05)]" data-testid="status-health">
-                <span className={`h-1.5 w-1.5 rounded-full ${healthQuery.isError ? 'bg-red-500 animate-pulse' : 'bg-green-500 shadow-[0_0_5px_#22c55e]'}`} />
-                {healthQuery.isLoading ? 'syncing...' : healthQuery.isError ? 'node offline' : <span className="text-green-500 neon-text">core online</span>}
+              <div className="flex items-center gap-3">
+                {updateAvailable && (
+                  <button
+                    onClick={applyUpdate}
+                    className="animate-pulse rounded-full border border-accent/50 bg-accent/10 px-3 py-2 font-mono text-[9px] uppercase tracking-[.12em] text-accent hover:bg-accent/20 flex items-center gap-2"
+                  >
+                    <RefreshCw className="h-3 w-3" /> New Logic Node v{latestVersion} available - Realignment recommended
+                  </button>
+                )}
+                <div className="hidden items-center gap-2 rounded-full border border-border bg-card/40 px-3 py-2 font-mono text-[9px] uppercase tracking-[.12em] text-foreground/60 sm:flex shadow-[0_0_10px_rgba(0,35,255,0.05)]" data-testid="status-health">
+                  <span className={`h-1.5 w-1.5 rounded-full ${healthQuery.isError ? 'bg-red-500 animate-pulse' : 'bg-green-500 shadow-[0_0_5px_#22c55e]'}`} />
+                  {healthQuery.isLoading ? 'syncing...' : healthQuery.isError ? 'node offline' : <span className="text-green-500 neon-text">core online</span>}
+                </div>
               </div>
             </header>
             <div className="mt-8"><StatStrip loading={summaryQuery.isLoading} error={summaryQuery.isError} totalSongs={summary?.totalSongs ?? 0} completedSongs={summary?.completedSongs ?? 0} minutesCreated={summary?.minutesCreated ?? 0} favoriteCount={summary?.favoriteCount ?? 0} /></div>

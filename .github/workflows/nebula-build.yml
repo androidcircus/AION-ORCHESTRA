@@ -20,6 +20,10 @@ jobs:
       run: npm install -g pnpm
     - name: Install Dependencies
       run: pnpm install
+    - name: Update Version Manifest
+      working-directory: artifacts/aion-orchestra
+      run: |
+        echo "{\"version\": \"4.2.${{ github.run_number }}\", \"buildDate\": \"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\", \"channel\": \"nebula-alpha\"}" > public/version.json
     - name: Build AION Core
       run: pnpm build
     - name: Sync Android
@@ -54,6 +58,10 @@ jobs:
       run: npm install -g pnpm
     - name: Install Dependencies
       run: pnpm install
+    - name: Update Version Manifest
+      working-directory: artifacts/aion-orchestra
+      run: |
+        echo "{\"version\": \"4.2.${{ github.run_number }}\", \"buildDate\": \"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\", \"channel\": \"nebula-alpha\"}" > public/version.json
     - name: Build AION Core
       run: pnpm build
     - name: Sync Electron
@@ -83,6 +91,10 @@ jobs:
       run: npm install -g pnpm
     - name: Install Dependencies
       run: pnpm install
+    - name: Update Version Manifest
+      working-directory: artifacts/aion-orchestra
+      run: |
+        echo "{\"version\": \"4.2.${{ github.run_number }}\", \"buildDate\": \"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\", \"channel\": \"nebula-alpha\"}" > public/version.json
     - name: Build AION Core
       run: pnpm build
     - name: Sync iOS
