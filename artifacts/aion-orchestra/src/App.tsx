@@ -27,6 +27,7 @@ import {
   SlidersHorizontal,
   Sparkles,
   Star,
+  Share2,
   Video,
   WandSparkles,
   X,
@@ -68,6 +69,8 @@ import NotFound from '@/pages/not-found';
 import { LibraryPage, StudioPage } from '@/pages/voice-to-instrument';
 import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import { useNeuralSync } from '@/hooks/use-neural-sync';
+import { useNativeSave } from '@/hooks/use-native-save';
+import { Share2 } from 'lucide-react';
 
 const queryClient = new QueryClient();
 
@@ -606,6 +609,24 @@ function Composer({ seedIdea }: { seedIdea?: { prompt: string; style: string } }
 }
 
 function SongRow({ song, onFavorite, onPlay, onRefine, onRemix, isPlaying }: { song: Song; onFavorite: (song: Song) => void; onPlay: (song: Song) => void; onRefine: (song: Song) => void; onRemix: (songId: string) => void; isPlaying: boolean }) {
+  const { saveFromUrl, shareFromUrl, isNative } = useNativeSave();
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!song.audioUrl) return;
+    setIsSaving(true);
+    try {
+      await saveFromUrl(song.audioUrl, `${song.title.replace(/\s+/g, '_')}.wav`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!song.audioUrl) return;
+    await shareFromUrl(song.audioUrl, `${song.title.replace(/\s+/g, '_')}.wav`, song.title, `Check out this track from AION Orchestra: ${song.prompt}`);
+  };
+
   return (
     <article className="group grid items-center gap-4 border-b border-border py-4 transition-colors hover:bg-primary/5 sm:grid-cols-[auto_1fr_auto] sm:px-3" data-testid={`card-song-${song.id}`}>
       <div className="flex items-center gap-3">
@@ -632,9 +653,26 @@ function SongRow({ song, onFavorite, onPlay, onRefine, onRemix, isPlaying }: { s
         <button type="button" onClick={() => onRemix(song.id)} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground/60 transition-all hover:border-secondary hover:text-secondary hover:shadow-[0_0_10px_rgba(188,0,255,0.2)]" title="Neural Remix">
           <RotateCcw className="h-4 w-4" />
         </button>
-        <button type="button" disabled={song.status !== SongStatus.completed} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground/60 transition-all hover:border-accent hover:text-accent hover:shadow-[0_0_10px_rgba(0,240,255,0.2)]" title="Export Stems (Nebula Ready)" onClick={() => window.open(song.audioUrl || '', '_blank')}>
-          <Download className="h-4 w-4" />
+        <button
+          type="button"
+          disabled={song.status !== SongStatus.completed || isSaving}
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground/60 transition-all hover:border-accent hover:text-accent hover:shadow-[0_0_10px_rgba(0,240,255,0.2)] disabled:opacity-50"
+          title="Export Stems (Nebula Ready)"
+          onClick={handleSave}
+        >
+          {isSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
         </button>
+        {isNative && (
+          <button
+            type="button"
+            disabled={song.status !== SongStatus.completed}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground/60 transition-all hover:border-accent hover:text-accent hover:shadow-[0_0_10px_rgba(0,240,255,0.2)]"
+            title="Share with Network"
+            onClick={handleShare}
+          >
+            <Share2 className="h-4 w-4" />
+          </button>
+        )}
         <button type="button" disabled={song.status !== SongStatus.completed || !song.audioUrl} onClick={() => onPlay(song)} className={`flex h-9 w-9 items-center justify-center rounded-full border transition-all ${isPlaying ? 'bg-accent text-background border-accent shadow-[0_0_15px_rgba(0,240,255,0.5)]' : 'bg-card text-foreground/60 border-border hover:border-accent hover:text-accent'} disabled:cursor-not-allowed disabled:opacity-35`} data-testid={`button-play-${song.id}`} aria-label={`Play ${song.title}`}>
           {isPlaying ? <Pause className="h-3.5 w-3.5 fill-current" /> : <Play className="ml-0.5 h-3.5 w-3.5 fill-current" />}
         </button>
@@ -762,6 +800,7 @@ function LatestSong({ song, nebulaRef }: { song: Song; nebulaRef: React.RefObjec
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
+  const { saveFile, shareFile, isNative } = useNativeSave();
 
   async function handleBroadcast() {
     if (!song.audioUrl || !nebulaRef.current) return;
@@ -773,13 +812,34 @@ function LatestSong({ song, nebulaRef }: { song: Song; nebulaRef: React.RefObjec
 
     try {
       const videoBlob = await nebulaRef.current.startBroadcast(song.audioUrl);
-      const url = URL.createObjectURL(videoBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${song.title}_Nebula_Broadcast.webm`;
-      a.click();
-      URL.revokeObjectURL(url);
+      await saveFile(videoBlob, `${song.title.replace(/\s+/g, '_')}_Nebula_Broadcast.webm`);
       toast({
+        title: "Broadcast Captured",
+        description: isNative ? "Signal stored in Documents." : "Your video has been saved to your downloads.",
+        variant: "default",
+      });
+    } catch (e) {
+      console.error('Broadcast failed', e);
+      toast({
+        title: "Link Terminated",
+        description: "Nebula failed to capture the broadcast. Try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsBroadcasting(false);
+    }
+  }
+
+  async function handleShare() {
+    if (!song.audioUrl || !nebulaRef.current) return;
+    setIsBroadcasting(true);
+    try {
+      const videoBlob = await nebulaRef.current.startBroadcast(song.audioUrl);
+      await shareFile(videoBlob, `${song.title.replace(/\s+/g, '_')}_Nebula.webm`, song.title, `Check out my latest creation on AION Orchestra: ${song.prompt}`);
+    } finally {
+      setIsBroadcasting(false);
+    }
+  }
         title: "Broadcast Captured",
         description: "Your video has been saved to your downloads.",
         variant: "default",
@@ -830,6 +890,17 @@ function LatestSong({ song, nebulaRef }: { song: Song; nebulaRef: React.RefObjec
           >
             <Video className="h-4 w-4" />
           </button>
+          {isNative && (
+            <button
+              type="button"
+              onClick={handleShare}
+              disabled={isBroadcasting || song.status !== SongStatus.completed}
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-card transition-all ${isBroadcasting ? 'bg-secondary text-white animate-pulse' : 'text-foreground/40 hover:border-secondary hover:text-secondary'} disabled:opacity-30`}
+              title="Share Broadcast"
+            >
+              <Share2 className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
       <div className="border-t border-border px-5 py-4 sm:px-6"><Waveform active={playing} /></div>
