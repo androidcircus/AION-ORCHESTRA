@@ -96,8 +96,9 @@ class InstrumentArchitectVM {
       id: "lo-fi hip hop",
       instruments: ["guitar", "harpsichord"],
       dspSettings: { drive: 5.5, revMix: 0.25, duckMix: 0.1, stereoWidth: 0.85, lpfCutoff: 0.15, tilt: 0.3 },
-      arrangementLogic: ({ melody, subBass, drumSample, atmosphere, vocalSample, nodes }) => {
-        return melody * 0.3 + subBass * 0.4 + drumSample * 0.6 + atmosphere + vocalSample * 0.4 + nodes.guitar.process();
+      arrangementLogic: ({ time, root, melody, subBass, drumSample, atmosphere, vocalSample, nodes }) => {
+        return melody * 0.3 + subBass * 0.4 + drumSample * 0.6 + atmosphere + vocalSample * 0.4 +
+               nodes.guitar.process() + nodes.harpsichord.process(time % 2, root * 1.5) * 0.15;
       }
     });
 

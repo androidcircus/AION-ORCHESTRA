@@ -987,9 +987,11 @@ function Home() {
                 {updateAvailable && (
                   <button
                     onClick={applyUpdate}
+                    disabled={isChecking}
                     className="animate-pulse rounded-full border border-accent/50 bg-accent/10 px-3 py-2 font-mono text-[9px] uppercase tracking-[.12em] text-accent hover:bg-accent/20 flex items-center gap-2"
                   >
-                    <RefreshCw className="h-3 w-3" /> New Logic Node v{latestVersion} available - Realignment recommended
+                    {isChecking ? <RotateCw className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                    New Logic Node v{latestVersion} available - Realignment recommended
                   </button>
                 )}
                 <div className="hidden items-center gap-2 rounded-full border border-border bg-card/40 px-3 py-2 font-mono text-[9px] uppercase tracking-[.12em] text-foreground/60 sm:flex shadow-[0_0_10px_rgba(0,35,255,0.05)]" data-testid="status-health">
