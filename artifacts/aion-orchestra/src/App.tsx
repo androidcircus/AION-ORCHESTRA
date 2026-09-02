@@ -70,6 +70,7 @@ import { LibraryPage, StudioPage } from '@/pages/voice-to-instrument';
 import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import { useNeuralSync } from '@/hooks/use-neural-sync';
 import { useNativeSave } from '@/hooks/use-native-save';
+import { NebulaNodes3D } from '@/components/nebula-nodes-3d';
 
 const queryClient = new QueryClient();
 
@@ -139,7 +140,21 @@ function RefinePanel({ song, onRefine, onCancel }: { song: Song; onRefine: (data
                   'cinematic-orchestral': 'Cinematic Orchestral',
                   'techno-pulse': 'Techno Pulse',
                   'dream-pop': 'Dream Pop',
-                  'vintage-soul': 'Vintage Soul'
+                  'vintage-soul': 'Vintage Soul',
+                  'drum-and-bass': 'Drum and Bass',
+                  'dubstep': 'Dubstep',
+                  'rap': 'Rap',
+                  'house': 'House',
+                  'dance': 'Dance',
+                  'country': 'Country',
+                  'r&b': 'R&B',
+                  'jazz': 'Jazz',
+                  'bluegrass': 'Bluegrass',
+                  'hip-hop': 'Hip Hop',
+                  'trap': 'Trap',
+                  'rock': 'Rock',
+                  'heavy-metal': 'Heavy Metal',
+                  'bardcore': 'Bardcore'
                 };
                 setWarmth(nameMap[id] || 'Custom');
               }}
@@ -213,29 +228,35 @@ function AIArchitect({ onSeedIdea }: { onSeedIdea: (prompt: string, style: strin
         </Button>
       </div>
 
-      <div className="bg-black/40 rounded-sm p-4 font-mono text-[11px] h-[200px] overflow-y-auto border border-border/50 shadow-inner">
-        {log.map((line, i) => (
-          <div key={i} className={`mb-1 ${line.startsWith('[SYSTEM]') ? 'text-accent' : 'text-foreground/70'}`}>
-            <span className="opacity-30 mr-2">[{new Date().toLocaleTimeString()}]</span>
-            {line}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          <div className="bg-black/40 rounded-sm p-4 font-mono text-[11px] h-[200px] overflow-y-auto border border-border/50 shadow-inner">
+            {log.map((line, i) => (
+              <div key={i} className={`mb-1 ${line.startsWith('[SYSTEM]') ? 'text-accent' : 'text-foreground/70'}`}>
+                <span className="opacity-30 mr-2">[{new Date().toLocaleTimeString()}]</span>
+                {line}
+              </div>
+            ))}
+            {isSynthesizing && <div className="text-primary animate-pulse mt-2">_COMPILE_IN_PROGRESS...</div>}
           </div>
-        ))}
-        {isSynthesizing && <div className="text-primary animate-pulse mt-2">_COMPILE_IN_PROGRESS...</div>}
-      </div>
 
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-3 border border-border bg-white/5 rounded-sm">
-          <div className="text-[10px] uppercase text-accent mb-1 font-bold">Neural Patch</div>
-          <div className="text-xs text-foreground/60 italic">"Nebula-Core v4.2"</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-3 border border-border bg-white/5 rounded-sm">
+              <div className="text-[10px] uppercase text-accent mb-1 font-bold">Neural Patch</div>
+              <div className="text-xs text-foreground/60 italic">"Nebula-Core v4.2"</div>
+            </div>
+            <div className="p-3 border border-border bg-white/5 rounded-sm">
+              <div className="text-[10px] uppercase text-primary mb-1 font-bold">Mobile Bridge</div>
+              <div className="text-xs text-foreground/60 italic">"APK-Sync Active"</div>
+            </div>
+            <div className="p-3 border border-border bg-white/5 rounded-sm">
+              <div className="text-[10px] uppercase text-secondary mb-1 font-bold">GitHub Sync</div>
+              <div className="text-xs text-foreground/60 italic">"Push-to-Build OK"</div>
+            </div>
+          </div>
         </div>
-        <div className="p-3 border border-border bg-white/5 rounded-sm">
-          <div className="text-[10px] uppercase text-primary mb-1 font-bold">Mobile Bridge</div>
-          <div className="text-xs text-foreground/60 italic">"APK-Sync Active"</div>
-        </div>
-        <div className="p-3 border border-border bg-white/5 rounded-sm">
-          <div className="text-[10px] uppercase text-secondary mb-1 font-bold">GitHub Sync</div>
-          <div className="text-xs text-foreground/60 italic">"Push-to-Build OK"</div>
-        </div>
+
+        <NebulaNodes3D />
       </div>
     </section>
   );
@@ -576,7 +597,21 @@ function Composer({ seedIdea }: { seedIdea?: { prompt: string; style: string } }
                 'cinematic-orchestral': 'Cinematic Orchestral',
                 'techno-pulse': 'Techno Pulse',
                 'dream-pop': 'Dream Pop',
-                'vintage-soul': 'Vintage Soul'
+                'vintage-soul': 'Vintage Soul',
+                'drum-and-bass': 'Drum and Bass',
+                'dubstep': 'Dubstep',
+                'rap': 'Rap',
+                'house': 'House',
+                'dance': 'Dance',
+                'country': 'Country',
+                'r&b': 'R&B',
+                'jazz': 'Jazz',
+                'bluegrass': 'Bluegrass',
+                'hip-hop': 'Hip Hop',
+                'trap': 'Trap',
+                'rock': 'Rock',
+                'heavy-metal': 'Heavy Metal',
+                'bardcore': 'Bardcore'
               };
               setWarmthPreset(nameMap[id] || 'Custom');
             }} activePresetId={warmthPreset.toLowerCase().replace(' ', '-')} />

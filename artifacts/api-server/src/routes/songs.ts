@@ -22,7 +22,8 @@ import {
 } from "@workspace/api-zod";
 import { db, songsTable, type Song as DbSong } from "@workspace/db";
 import { logger } from "../lib/logger";
-import { applySaturation, LowPassFilter, Chorus, getTapeHiss, Widener, GranularTexture, Reverb, SidechainDucker, TiltEQ, AionLimiter, VinylCrackle, Aion808, AionEPiano, NebulaPad, PulseLead, applyMasterTone, CyberKick, NeonSnare, GlitchHats, AionVox, generateMidiData, AionStrings, AionBrass, AionFlute, AionGuitar, StradivariusNode, CrystalFluteNode, BuchlaNode, HarpsichordNode, KhluiNode, WorldPerc } from "../lib/dsp";
+import { applySaturation, LowPassFilter, Chorus, getTapeHiss, Widener, GranularTexture, Reverb, SidechainDucker, TiltEQ, AionLimiter, VinylCrackle, Aion808, AionEPiano, NebulaPad, PulseLead, applyMasterTone, CyberKick, NeonSnare, GlitchHats, AionVox, generateMidiData, AionStrings, AionBrass, AionFlute, AionGuitar, StradivariusNode, CrystalFluteNode, BuchlaNode, HarpsichordNode, KhluiNode, WorldPerc, HeavyMetalGuitar, BanjoNode, WobbleBass } from "../lib/dsp";
+import { architect } from "../lib/instrument-architect";
 
 const router: IRouter = Router();
 
@@ -126,6 +127,46 @@ const seedSongs = [
     coverHue: 45,
     isFavorite: false,
     createdAt: new Date(Date.now() - 1000 * 60 * 12),
+  },
+  {
+    id: "seed-dnb-pulse",
+    title: "Velocity Shift",
+    prompt: "High-speed drum and bass with rolling breaks and heavy sub-lows",
+    lyrics: null,
+    style: "Drum and Bass",
+    tags: ["dnb", "fast", "electronic"],
+    duration: 180,
+    bpm: 174,
+    musicalKey: "E minor",
+    status: "completed",
+    progress: 100,
+    stage: "Ready to play",
+    model: "AION Core (Ideation)",
+    warmthPreset: "Drum and Bass",
+    audioUrl: "/api/audio/seed-dnb-pulse",
+    coverHue: 190,
+    isFavorite: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 120),
+  },
+  {
+    id: "seed-metal-core",
+    title: "Crushed Circuit",
+    prompt: "Heavy metal with high-gain distortion and aggressive double-kick",
+    lyrics: "SYSTEM OVERLOAD / IRON AND CORE",
+    style: "Heavy Metal",
+    tags: ["metal", "heavy", "aggressive"],
+    duration: 155,
+    bpm: 140,
+    musicalKey: "D minor",
+    status: "completed",
+    progress: 100,
+    stage: "Ready to play",
+    model: "AION Core (Ideation)",
+    warmthPreset: "Heavy Metal",
+    audioUrl: "/api/audio/seed-metal-core",
+    coverHue: 0,
+    isFavorite: true,
+    createdAt: new Date(Date.now() - 1000 * 60 * 200),
   },
 ];
 
@@ -542,6 +583,17 @@ router.get("/audio/:songId", async (req, res) => {
     metalGuitar.init(root * 2, sampleRate);
     banjo.init(root * 3, sampleRate);
 
+    // Instrument Architect VM Resolution
+    const vmNodes: Record<string, any> = {
+      synth808, epiano, pad, lead, vox,
+      strings, brass, flute, guitar,
+      strad, crystalFlute, buchla, harpsichord, khlui,
+      metalGuitar, banjo, wobble, worldPerc,
+      kick, snare, hats, sub808: synth808
+    };
+
+    const vmArrangement = architect.getArrangement(song.warmthPreset) || architect.getArrangement(song.style);
+
     // Preset Overrides
     let drive = 1.8 + (seed % 10) / 5;
     let revMix = 0.3;
@@ -550,7 +602,15 @@ router.get("/audio/:songId", async (req, res) => {
     let lpfCutoff = 0.4 + (song.bpm / 400);
     let tilt = 0.5;
 
-    if (song.warmthPreset === "Tube Warmth") {
+    if (vmArrangement) {
+      const s = vmArrangement.dspSettings;
+      drive = s.drive;
+      revMix = s.revMix;
+      duckMix = s.duckMix;
+      stereoWidth = s.stereoWidth;
+      lpfCutoff = s.lpfCutoff;
+      tilt = s.tilt;
+    } else if (song.warmthPreset === "Tube Warmth") {
       drive = 3.5;
       lpfCutoff = 0.35;
       revMix = 0.15;
@@ -690,34 +750,41 @@ router.get("/audio/:songId", async (req, res) => {
       const subBassDrive = (song.warmthPreset === "Drum and Bass" || song.warmthPreset === "Dubstep" || song.warmthPreset === "Trap") ? 0.8 : 0.4;
       const subBassSample = Math.sin(time * Math.PI * 2 * (root / 4)) * subBassDrive;
 
-      // Generative Instrument Arrangement based on Preset
+      // Generative Instrument Arrangement based on Preset or Style via VM
       let instrumentSample = 0;
-      if (song.warmthPreset === "Techno Pulse") {
-        instrumentSample = lead.process(time, root * 2) * 0.3 + synth808.process(time % (60/song.bpm), true, 40) * 0.5 + drumSample + vocalSample * 0.2 + buchlaLayer;
-      } else if (song.warmthPreset === "Lo-Fi Hip Hop") {
-        instrumentSample = melody * 0.3 + subBass * 0.4 + drumSample * 0.6 + atmosphere + vocalSample * 0.4 + guitarLayer + harpsichordLayer;
-      } else if (song.warmthPreset === "Vintage Soul") {
-        instrumentSample = epiano.process(time % 2, root) * 0.5 + subBass * 0.5 + drumSample * 0.4 + vocalSample * 0.5 + khluiLayer + (worldPerc ? worldPerc.process(stepTime, kickTrigger) * 0.25 : 0);
-      } else if (song.warmthPreset === "Cinematic Orchestral") {
-        instrumentSample = stradLayer + brassLayer + pad.process(time, root, sampleRate) * 0.4 + vocalSample * 0.3 + crystalLayer;
-      } else if (song.warmthPreset === "Dream Pop") {
-        instrumentSample = pad.process(time, root, sampleRate) * 0.6 + fluteLayer + atmosphere + vocalSample * 0.3 + crystalLayer;
-      } else if (song.warmthPreset === "Drum and Bass") {
-        instrumentSample = wobble.process(time, root / 2, 8) * 0.6 + drumSample * 0.8 + vocalSample * 0.2 + subBassSample;
-      } else if (song.warmthPreset === "Dubstep") {
-        instrumentSample = wobble.process(time, root / 4, 4) * 0.7 + drumSample * 0.6 + vocalSample * 0.3 + subBassSample;
-      } else if (song.warmthPreset === "Heavy Metal") {
-        instrumentSample = metalGuitar.process() * 0.6 + brassLayer * 0.4 + drumSample * 0.5 + subBassSample * 0.2;
-      } else if (song.warmthPreset === "Bardcore") {
-        instrumentSample = harpsichordLayer + fluteLayer + vocalSample * 0.4 + strings.process(time % 4, root * 1.5, 'violin') * 0.3;
-      } else if (song.style.toLowerCase().includes("trap")) {
-        instrumentSample = synth808.process(time % (60/song.bpm), true, 60) * 0.6 + drumSample * 0.7 + vocalSample * 0.4 + subBassSample * 0.5;
-      } else if (song.style.toLowerCase().includes("bluegrass")) {
-        instrumentSample = banjo.process() * 0.5 + fluteLayer * 0.3 + (worldPerc ? worldPerc.process(stepTime, kickTrigger) * 0.2 : 0) + strings.process(time % 4, root, 'violin') * 0.4;
+      if (vmArrangement) {
+        instrumentSample = vmArrangement.arrangementLogic({
+          time, root, sampleRate, bpm: song.bpm, stepTime, kickTrigger, snareTrigger,
+          vocalSample, drumSample, melody, subBass, subBassSample, atmosphere,
+          nodes: vmNodes
+        });
       } else {
-        instrumentSample = (melody + subBass + grit + atmosphere + drumSample * 0.3 + vocalSample * 0.5 + stradLayer + (worldPerc ? worldPerc.process(stepTime, kickTrigger) * 0.2 : 0) + subBassSample * 0.3);
+        const lowerStyle = song.style.toLowerCase();
+        if (song.warmthPreset === "Techno Pulse" || lowerStyle.includes("techno")) {
+          instrumentSample = lead.process(time, root * 2) * 0.3 + synth808.process(time % (60/song.bpm), true, 40) * 0.5 + drumSample + vocalSample * 0.2 + buchla.process(time, root / 4);
+        } else if (song.warmthPreset === "Lo-Fi Hip Hop" || lowerStyle.includes("lo-fi")) {
+          instrumentSample = melody * 0.3 + subBass * 0.4 + drumSample * 0.6 + atmosphere + vocalSample * 0.4 + guitar.process() + harpsichord.process(time % 2, root * 1.5) * 0.15;
+        } else if (song.warmthPreset === "Vintage Soul" || lowerStyle.includes("soul")) {
+          instrumentSample = epiano.process(time % 2, root) * 0.5 + subBass * 0.5 + drumSample * 0.4 + vocalSample * 0.5 + khlui.process(time % 4, root) * 0.1 + (worldPerc ? worldPerc.process(stepTime, kickTrigger) * 0.25 : 0);
+        } else if (song.warmthPreset === "Cinematic Orchestral" || lowerStyle.includes("cinematic")) {
+          instrumentSample = strad.process(time % 4, root) * 0.25 + brass.process(time % 2, root / 2) * 0.15 + pad.process(time, root, sampleRate) * 0.4 + vocalSample * 0.3 + crystalFlute.process(time % 6, root * 3) * 0.15;
+        } else if (song.warmthPreset === "Dream Pop" || lowerStyle.includes("dream pop")) {
+          instrumentSample = pad.process(time, root, sampleRate) * 0.6 + flute.process(time % 8, root * 2) * 0.1 + atmosphere + vocalSample * 0.3 + crystalFlute.process(time % 6, root * 3) * 0.15;
+        } else if (lowerStyle.includes("trap") || lowerStyle.includes("rap") || lowerStyle.includes("hip hop")) {
+          instrumentSample = synth808.process(time % (60/song.bpm), true, 60) * 0.6 + drumSample * 0.7 + vocalSample * 0.4 + subBassSample * 0.5;
+        } else if (lowerStyle.includes("bluegrass") || lowerStyle.includes("country")) {
+          instrumentSample = banjo.process() * 0.5 + guitar.process() * 0.3 + (worldPerc ? worldPerc.process(stepTime, kickTrigger) * 0.2 : 0) + strings.process(time % 4, root, 'violin') * 0.4;
+        } else if (lowerStyle.includes("house") || lowerStyle.includes("dance")) {
+          const houseKick = kick.process(stepTime, true) * 0.9;
+          instrumentSample = houseKick + epiano.process(time % 1, root) * 0.4 + pad.process(time, root * 1.5, sampleRate) * 0.3 + drumSample * 0.4;
+        } else if (lowerStyle.includes("jazz") || lowerStyle.includes("r&b")) {
+          instrumentSample = epiano.process(time % 4, root) * 0.4 + strings.process(time % 8, root / 2, 'cello') * 0.3 + brass.process(time % 2, root / 2) * 0.15 * 0.2 + atmosphere * 0.5;
+        } else if (lowerStyle.includes("rock")) {
+          instrumentSample = metalGuitar.process() * 0.4 + drumSample * 0.6 + subBass * 0.3 + strings.process(time % 4, root, 'violin') * 0.2;
+        } else {
+          instrumentSample = (melody + subBass + grit + atmosphere + drumSample * 0.3 + vocalSample * 0.5 + strad.process(time % 4, root) * 0.25 + (worldPerc ? worldPerc.process(stepTime, kickTrigger) * 0.2 : 0) + subBassSample * 0.3);
+        }
       }
-erc.process(stepTime, kickTrigger) * 0.2);
       }
 
       const rawSample = instrumentSample * pulse * 0.7; // Scaled to prevent clipping

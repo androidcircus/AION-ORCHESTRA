@@ -67,13 +67,13 @@ export const GenerateSongBody = zod.object({
   "duration": zod.number().min(generateSongBodyDurationMin).max(generateSongBodyDurationMax),
   "instrumental": zod.boolean(),
   "energy": zod.number().min(generateSongBodyEnergyMin).max(generateSongBodyEnergyMax),
-  "warmthPreset": zod.enum(['Custom', 'Tube Warmth', 'Tape Crush', 'Wide Air', 'Subtle Glow', 'Pumping Space', 'Lo-Fi Hip Hop', 'Cinematic Orchestral', 'Techno Pulse', 'Dream Pop', 'Vintage Soul', 'Drum and Bass', 'Dubstep', 'Heavy Metal', 'Bardcore']).optional(),
+  "warmthPreset": zod.enum(['Custom', 'Tube Warmth', 'Tape Crush', 'Wide Air', 'Subtle Glow', 'Pumping Space', 'Lo-Fi Hip Hop', 'Cinematic Orchestral', 'Techno Pulse', 'Dream Pop', 'Vintage Soul', 'Drum and Bass', 'Dubstep', 'Rap', 'House', 'Dance', 'Country', 'R&B', 'Jazz', 'Bluegrass', 'Hip Hop', 'Trap', 'Rock', 'Heavy Metal', 'Bardcore']).optional(),
   "model": zod.enum(['AION Core (Ideation)', 'Soundraw (Studio Stems)', 'Suno (Vocal Focus)'])
 })
 
 export const RefineSongInput = zod.object({
   "energy": zod.number().min(generateSongBodyEnergyMin).max(generateSongBodyEnergyMax).optional(),
-  "warmthPreset": zod.enum(['Custom', 'Tube Warmth', 'Tape Crush', 'Wide Air', 'Subtle Glow', 'Pumping Space', 'Lo-Fi Hip Hop', 'Cinematic Orchestral', 'Techno Pulse', 'Dream Pop', 'Vintage Soul', 'Drum and Bass', 'Dubstep', 'Heavy Metal', 'Bardcore']).optional(),
+  "warmthPreset": zod.enum(['Custom', 'Tube Warmth', 'Tape Crush', 'Wide Air', 'Subtle Glow', 'Pumping Space', 'Lo-Fi Hip Hop', 'Cinematic Orchestral', 'Techno Pulse', 'Dream Pop', 'Vintage Soul', 'Drum and Bass', 'Dubstep', 'Rap', 'House', 'Dance', 'Country', 'R&B', 'Jazz', 'Bluegrass', 'Hip Hop', 'Trap', 'Rock', 'Heavy Metal', 'Bardcore']).optional(),
   "style": zod.string().optional(),
   "lyrics": zod.string().optional()
 })

@@ -83,6 +83,21 @@ class ChiefMedicalOfficer {
       swarmActive: this.isSwarmActive
     };
   }
+
+  /**
+   * Deploys the AION Swarm to actively monitor and repair the codebase.
+   * This is the "Chief Medical Officer" oversight in action.
+   */
+  public async deploySwarm() {
+    logger.info("[CMO]: Swarm Deployed. Codebase integrity check in progress...");
+    const activeReports = this.reports.filter(r => r.repairStatus === "pending");
+
+    for (const report of activeReports) {
+      await this.deployRepairSwarm(report);
+    }
+
+    return { success: true, message: "Swarm sweep complete. System realignment successful." };
+  }
 }
 
 export const cmo = new ChiefMedicalOfficer();

@@ -5,8 +5,10 @@ AION ORCHESTRA - A Cyberpunk Nebula Music Creation Suite. Featuring generative R
 ## Key Features
 - **Library of Congress Suite:** Historic generative models of the "Betts" Stradivarius (1704), James Madison's Crystal Flute (1813), the Buchla Model 100 Modular Synth, and the Pleyel Harpsichord.
 - **Worldwide Orchestral Suite:** High-fidelity models for global instruments including ensemble Strings, Brass, Woodwinds, Physical Model Guitar, and World Percussion.
-- **Signature Instruments:** Built-in AION-808, AION-VINTAGE (EPiano), NEBULA-PAD, and PULSE-LEAD synthesis models.
-- **Cyberpunk UI:** High-end Royal Blue/Purple neon theme with nebula-drift backgrounds and "Orbitron" branding.
+- **Advanced Multi-Genre Engine:** Native support for Drum and Bass, Dubstep, Rap, House, Dance, Country, R&B, Jazz, Bluegrass, Hip Hop, Trap, Rock, Heavy Metal, and Bardcore.
+- **Cyberpunk UI:** High-end Royal Blue/Purple neon theme with interactive 3D Virtual Machine (VM) visualization.
+- **Chief Medical Officer (CMO):** Autonomous system health monitoring and "Repair Swarm" deployment to ensure 100% codebase integrity.
+- **Instrument Architect VM:** Specialized logic node for dynamic registration of new instruments and genre arrangements.
 - **Native VST (Nebula Edition):**
     - **8-Knob Producer View:** Drive, Warmth, Tone, Bias, Width, Reverb, Sidechain, Mix.
     - **4x Oversampling:** High-fidelity processing to eliminate digital aliasing.
@@ -18,6 +20,7 @@ AION ORCHESTRA - A Cyberpunk Nebula Music Creation Suite. Featuring generative R
     - **Wobble Bass:** LFO-modulated resonant filters for Dubstep/DnB.
     - **Trap 808:** Decaying sub-harmonics with aggressive saturation.
     - **Sub-Neural Bed:** Constant low-frequency reinforcement for heavy genres.
+    - **Worldwide Instrument Suite:** Native modeling for Banjo, Heavy Metal Guitar, Harpsichord, and more.
 - **AION Core Engine 4.2 (Cloud):**
     - **Neural Refinement:** Soundraw-style remixing for Energy, Warmth, and Style.
     - **Studio Stems Export:** High-quality stereo WAVs ready for Audacity/Ableton.

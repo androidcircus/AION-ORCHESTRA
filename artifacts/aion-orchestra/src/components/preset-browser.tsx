@@ -1,7 +1,10 @@
 import React from 'react';
 import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
-import { Music, Sliders, Waves, Wind, Sparkles, Headphones, Ghost, Zap, Cloud, Heart } from 'lucide-react';
+import {
+  Music, Sliders, Waves, Wind, Sparkles, Headphones, Ghost, Zap, Cloud, Heart,
+  Volume2, Disc, Mic2, Home, PlayCircle, Sun, Activity, Guitar, Piano, Hammer, Skull, Sword
+} from 'lucide-react';
 
 interface Preset {
   id: string;
@@ -81,6 +84,104 @@ const presets: Preset[] = [
     description: 'Warm mid-saturated mono-compatible vintage tone.',
     icon: <Heart className="w-4 h-4" />,
     tags: ['Classic', 'Soul'],
+  },
+  {
+    id: 'drum-and-bass',
+    name: 'Drum and Bass',
+    description: 'High-speed rhythmic syncopation with deep sub weight.',
+    icon: <Volume2 className="w-4 h-4" />,
+    tags: ['Fast', 'Bass'],
+  },
+  {
+    id: 'dubstep',
+    name: 'Dubstep',
+    description: 'Aggressive wobble modulation and heavy transient impacts.',
+    icon: <Activity className="w-4 h-4" />,
+    tags: ['Heavy', 'Wobble'],
+  },
+  {
+    id: 'rap',
+    name: 'Rap',
+    description: 'Punchy transient focus with clean, dry vocal space.',
+    icon: <Mic2 className="w-4 h-4" />,
+    tags: ['Urban', 'Punchy'],
+  },
+  {
+    id: 'house',
+    name: 'House',
+    description: 'Steady four-on-the-floor drive with classic synth textures.',
+    icon: <Home className="w-4 h-4" />,
+    tags: ['Club', 'Dance'],
+  },
+  {
+    id: 'dance',
+    name: 'Dance',
+    description: 'Bright, energetic pop-electronic hybrid with massive energy.',
+    icon: <PlayCircle className="w-4 h-4" />,
+    tags: ['Pop', 'Energy'],
+  },
+  {
+    id: 'country',
+    name: 'Country',
+    description: 'Natural acoustic resonance with clear, balanced highs.',
+    icon: <Sun className="w-4 h-4" />,
+    tags: ['Organic', 'Acoustic'],
+  },
+  {
+    id: 'r&b',
+    name: 'R&B',
+    description: 'Silky smooth compression and deep, emotive warmth.',
+    icon: <Disc className="w-4 h-4" />,
+    tags: ['Smooth', 'Vibe'],
+  },
+  {
+    id: 'jazz',
+    name: 'Jazz',
+    description: 'Complex harmonic clarity with wide dynamic range.',
+    icon: <Piano className="w-4 h-4" />,
+    tags: ['Smooth', 'Dynamic'],
+  },
+  {
+    id: 'bluegrass',
+    name: 'Bluegrass',
+    description: 'Sharp, fast transients with bright string modeling.',
+    icon: <Hammer className="w-4 h-4" />,
+    tags: ['Fast', 'String'],
+  },
+  {
+    id: 'hip-hop',
+    name: 'Hip Hop',
+    description: 'Heavy 808 sub reinforcement and dusty sample character.',
+    icon: <Headphones className="w-4 h-4" />,
+    tags: ['Urban', 'Sub'],
+  },
+  {
+    id: 'trap',
+    name: 'Trap',
+    description: 'Aggressive rapid-fire hats and distorted sub-lows.',
+    icon: <Zap className="w-4 h-4" />,
+    tags: ['Dark', 'Aggressive'],
+  },
+  {
+    id: 'rock',
+    name: 'Rock',
+    description: 'Mid-forward saturation with driven cabinet simulation.',
+    icon: <Guitar className="w-4 h-4" />,
+    tags: ['Driven', 'Live'],
+  },
+  {
+    id: 'heavy-metal',
+    name: 'Heavy Metal',
+    description: 'Extreme distortion and scooped mid-frequency aggression.',
+    icon: <Skull className="w-4 h-4" />,
+    tags: ['Extreme', 'Metal'],
+  },
+  {
+    id: 'bardcore',
+    name: 'Bardcore',
+    description: 'Medieval acoustic modeling with harpsichord and flute.',
+    icon: <Sword className="w-4 h-4" />,
+    tags: ['Acoustic', 'Historic'],
   },
 ];
 

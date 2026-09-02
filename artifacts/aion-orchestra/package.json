@@ -80,6 +80,8 @@
     "vite": "catalog:",
     "wouter": "^3.3.5",
     "zod": "catalog:",
+    "three": "^0.174.0",
+    "@types/three": "^0.174.0",
     "@capacitor/core": "^6.0.0",
     "@capacitor/android": "^6.0.0",
     "@capacitor/ios": "^6.0.0",
