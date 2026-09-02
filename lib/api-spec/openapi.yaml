@@ -104,6 +104,76 @@ paths:
                 $ref: "#/components/schemas/Song"
         "404":
           description: Song not found
+  /songs/{songId}/refine:
+    patch:
+      operationId: refineSong
+      tags: [songs]
+      summary: Refine a generated song
+      description: Update parameters like energy, warmth, or style and re-render the track.
+      parameters:
+        - name: songId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefineSongInput"
+      responses:
+        "200":
+          description: Refined song
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Song"
+        "404":
+          description: Song not found
+  /songs/{songId}/midi:
+    get:
+      operationId: getSongMidi
+      tags: [songs]
+      summary: Export track as MIDI
+      parameters:
+        - name: songId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: MIDI file data
+          content:
+            audio/midi:
+              schema:
+                type: string
+                format: binary
+  /projects:
+    get:
+      operationId: listProjects
+      tags: [workspace]
+      summary: List arrangement projects
+    post:
+      operationId: createProject
+      tags: [workspace]
+      summary: Create a new timeline arrangement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectInput"
+  /projects/{projectId}:
+    get:
+      operationId: getProject
+      tags: [workspace]
+      summary: Get arrangement details
+    patch:
+      operationId: updateProject
+      tags: [workspace]
+      summary: Update timeline items
   /workspace/summary:
     get:
       operationId: getWorkspaceSummary
@@ -117,6 +187,42 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkspaceSummary"
+  /feed:
+    get:
+      operationId: listPublicFeed
+      tags: [songs]
+      summary: List public signal feed
+      description: Returns a global feed of the latest completed tracks from all users.
+      responses:
+        "200":
+          description: Public feed list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Song"
+  /songs/{songId}/remix:
+    post:
+      operationId: remixSong
+      tags: [songs]
+      summary: Initialize a neural remix
+      description: Creates a new track draft using the AI seed and parameters of an existing song.
+      parameters:
+        - name: songId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Remix initialized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Song"
+        "404":
+          description: Original song not found
 components:
   schemas:
     HealthStatus:
@@ -158,6 +264,10 @@ components:
           type: string
         model:
           type: string
+        energy:
+          type: number
+        warmthPreset:
+          type: string
         audioUrl:
           type: ["string", "null"]
         coverHue:
@@ -181,6 +291,8 @@ components:
         - progress
         - stage
         - model
+        - energy
+        - warmthPreset
         - audioUrl
         - coverHue
         - isFavorite
@@ -206,9 +318,12 @@ components:
           type: number
           minimum: 0
           maximum: 100
+        warmthPreset:
+          type: string
+          enum: [Custom, Tube Warmth, Tape Crush, Wide Air, Subtle Glow, Pumping Space, Lo-Fi Hip Hop, Cinematic Orchestral, Techno Pulse, Dream Pop, Vintage Soul]
         model:
           type: string
-          enum: [AION Demo Engine, ACE-Step 1.5, YuE]
+          enum: [AION Core (Ideation), Soundraw (Studio Stems), Suno (Vocal Focus)]
       required:
         - prompt
         - style
@@ -216,6 +331,49 @@ components:
         - instrumental
         - energy
         - model
+    RefineSongInput:
+      type: object
+      properties:
+        energy:
+          type: number
+          minimum: 0
+          maximum: 100
+        warmthPreset:
+          type: string
+          enum: [Custom, Tube Warmth, Tape Crush, Wide Air, Subtle Glow, Pumping Space, Lo-Fi Hip Hop, Cinematic Orchestral, Techno Pulse, Dream Pop, Vintage Soul]
+        style:
+          type: string
+        lyrics:
+          type: string
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/TimelineItem"
+    ProjectInput:
+      type: object
+      properties:
+        name:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/TimelineItem"
+    TimelineItem:
+      type: object
+      properties:
+        songId:
+          type: string
+        startTime:
+          type: number
+        duration:
+          type: number
     WorkspaceSummary:
       type: object
       properties:

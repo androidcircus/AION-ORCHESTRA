@@ -32,7 +32,7 @@ A music creation workspace that turns prompts and lyrics into playable tracks, w
 
 ## Architecture decisions
 
-- The first release uses an in-process AION Demo Engine that produces a deterministic playable WAV while keeping the model selection contract ready for ACE-Step and YuE adapters.
+- The first release uses an in-process MelodyCraft Engine that produces a deterministic playable WAV while keeping the model selection contract ready for ACE-Step and YuE adapters.
 - Song metadata is persisted in PostgreSQL; audio is rendered on demand from the completed session so the demo does not depend on a separate storage bucket.
 - The frontend uses generated React Query hooks from the OpenAPI contract and polls active sessions until they complete.
 

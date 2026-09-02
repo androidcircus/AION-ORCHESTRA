@@ -7,11 +7,22 @@ import {
   GetSongResponse,
   GetWorkspaceSummaryResponse,
   ListSongsResponse,
+  RefineSongInput,
+  RefineSongParams,
   ToggleSongFavoriteParams,
   ToggleSongFavoriteResponse,
+  ListProjectsResponse,
+  ProjectInput,
+  Project,
+  GetProjectParams,
+  UpdateProjectParams,
+  RemixSongParams,
+  GetAudioParams,
+  GetMidiParams,
 } from "@workspace/api-zod";
 import { db, songsTable, type Song as DbSong } from "@workspace/db";
 import { logger } from "../lib/logger";
+import { applySaturation, LowPassFilter, Chorus, getTapeHiss, Widener, GranularTexture, Reverb, SidechainDucker, TiltEQ, AionLimiter, VinylCrackle, Aion808, AionEPiano, NebulaPad, PulseLead, applyMasterTone, CyberKick, NeonSnare, GlitchHats, AionVox, generateMidiData, AionStrings, AionBrass, AionFlute, AionGuitar, StradivariusNode, CrystalFluteNode, BuchlaNode, HarpsichordNode, KhluiNode, WorldPerc } from "../lib/dsp";
 
 const router: IRouter = Router();
 
@@ -29,7 +40,8 @@ const seedSongs = [
     status: "completed",
     progress: 100,
     stage: "Ready to play",
-    model: "AION Demo Engine",
+    model: "AION Core (Ideation)",
+    warmthPreset: "Custom",
     audioUrl: "/api/audio/seed-neon-tide",
     coverHue: 278,
     isFavorite: true,
@@ -48,11 +60,72 @@ const seedSongs = [
     status: "completed",
     progress: 100,
     stage: "Ready to play",
-    model: "AION Demo Engine",
+    model: "AION Core (Ideation)",
+    warmthPreset: "Custom",
     audioUrl: "/api/audio/seed-signal-fire",
     coverHue: 32,
     isFavorite: false,
     createdAt: new Date(Date.now() - 1000 * 60 * 95),
+  },
+  {
+    id: "seed-lofi-nebula",
+    title: "Midnight Nebula",
+    prompt: "Dusty lo-fi hip hop with a deep royal blue sub bass and ethereal purple pads",
+    lyrics: "Floating through the violet haze\nLost inside the digital maze",
+    style: "Lo-Fi Hip Hop",
+    tags: ["lo-fi", "chill", "cyberpunk", "nebula"],
+    duration: 120,
+    bpm: 84,
+    musicalKey: "C minor",
+    status: "completed",
+    progress: 100,
+    stage: "Ready to play",
+    model: "AION Core (Ideation)",
+    warmthPreset: "Lo-Fi Hip Hop",
+    audioUrl: "/api/audio/seed-lofi-nebula",
+    coverHue: 260,
+    isFavorite: true,
+    createdAt: new Date(),
+  },
+  {
+    id: "seed-techno-pulse",
+    title: "Orbital Relay",
+    prompt: "Aggressive pulse-lead techno with high-impact cyber-kick and 100% sidechain pumping",
+    lyrics: "Circuit breaker / High speed relay / Pulse of the machine",
+    style: "Techno Pulse",
+    tags: ["techno", "aggressive", "cyberpunk", "nebula"],
+    duration: 160,
+    bpm: 128,
+    musicalKey: "F minor",
+    status: "completed",
+    progress: 100,
+    stage: "Ready to play",
+    model: "AION Core (Ideation)",
+    warmthPreset: "Techno Pulse",
+    audioUrl: "/api/audio/seed-techno-pulse",
+    coverHue: 200,
+    isFavorite: true,
+    createdAt: new Date(Date.now() - 1000 * 60 * 5),
+  },
+  {
+    id: "seed-vintage-soul",
+    title: "Electric Memories",
+    prompt: "Warm vintage soul with crystalline bell piano, thick sub bass, and a classic mid-saturated tone",
+    lyrics: "Neon reflections in a velvet night / Echoes of a soul in flight",
+    style: "Vintage Soul",
+    tags: ["soul", "vintage", "epiano", "warm"],
+    duration: 155,
+    bpm: 72,
+    musicalKey: "A major",
+    status: "completed",
+    progress: 100,
+    stage: "Ready to play",
+    model: "AION Core (Ideation)",
+    warmthPreset: "Vintage Soul",
+    audioUrl: "/api/audio/seed-vintage-soul",
+    coverHue: 45,
+    isFavorite: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 12),
   },
 ];
 
@@ -161,7 +234,7 @@ router.post("/songs/generate", async (req, res) => {
     id,
     title: titleFromPrompt(input.prompt),
     prompt: input.prompt,
-    lyrics: input.lyrics || null,
+    lyrics: input.instrumental ? null : (input.lyrics || null),
     style: input.style,
     tags: tagsFor(input.style, input.prompt),
     duration: input.duration,
@@ -171,6 +244,8 @@ router.post("/songs/generate", async (req, res) => {
     progress: 8,
     stage: "Queued for AION",
     model: input.model,
+    energy: input.energy,
+    warmthPreset: input.warmthPreset || "Custom",
     audioUrl: `/api/audio/${id}`,
     coverHue: 220 + (hash % 130),
     isFavorite: false,
@@ -230,10 +305,63 @@ router.patch("/songs/:songId/favorite", async (req, res) => {
       .set({ isFavorite: !current.isFavorite })
       .where(eq(songsTable.id, parsed.data.songId))
       .returning();
+
+    if (!updated) {
+      res.status(500).json({ error: "Failed to update favorite" });
+      return;
+    }
     res.json(ToggleSongFavoriteResponse.parse(toApiSong(updated)));
   } catch (error) {
     req.log.error({ err: error }, "Failed to toggle favorite");
     res.status(500).json({ error: "Unable to update favorite" });
+  }
+});
+
+router.patch("/songs/:songId/refine", async (req, res) => {
+  const params = RefineSongParams.safeParse(req.params);
+  const body = RefineSongInput.safeParse(req.body);
+
+  if (!params.success || !body.success) {
+    res.status(400).json({ error: "Invalid refine request" });
+    return;
+  }
+
+  try {
+    const [song] = await db
+      .select()
+      .from(songsTable)
+      .where(eq(songsTable.id, params.data.songId))
+      .limit(1);
+
+    if (!song) {
+      res.status(404).json({ error: "Song not found" });
+      return;
+    }
+
+    const updates = {
+      ...body.data,
+      status: "generating",
+      progress: 50,
+      stage: "Refining Soundraw stems",
+    };
+
+    const [updated] = await db
+      .update(songsTable)
+      .set(updates)
+      .where(eq(songsTable.id, params.data.songId))
+      .returning();
+
+    if (!updated) {
+      res.status(500).json({ error: "Failed to refine song" });
+      return;
+    }
+
+    scheduleDemoGeneration(song.id);
+
+    res.json(GetSongResponse.parse(toApiSong(updated)));
+  } catch (error) {
+    req.log.error({ err: error }, "Failed to refine song");
+    res.status(500).json({ error: "Unable to refine song" });
   }
 });
 
@@ -259,12 +387,68 @@ router.get("/workspace/summary", async (req, res) => {
   }
 });
 
+router.get("/feed", async (req, res) => {
+  try {
+    const feed = await db
+      .select()
+      .from(songsTable)
+      .where(eq(songsTable.status, "completed"))
+      .orderBy(desc(songsTable.createdAt))
+      .limit(50);
+    res.json(ListSongsResponse.parse(feed.map(toApiSong)));
+  } catch (error) {
+    req.log.error({ err: error }, "Failed to load public feed");
+    res.status(500).json({ error: "Unable to load feed" });
+  }
+});
+
+router.post("/songs/:songId/remix", async (req, res) => {
+  const params = RemixSongParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid song id" });
+    return;
+  }
+  try {
+    const [original] = await db
+      .select()
+      .from(songsTable)
+      .where(eq(songsTable.id, params.data.songId))
+      .limit(1);
+
+    if (!original) return res.status(404).json({ error: "Original song not found" });
+
+    const id = `remix-${Date.now()}-${Math.abs(hashString(original.prompt)).toString(36)}`;
+    const remix = {
+      ...original,
+      id,
+      title: `Remix: ${original.title}`,
+      status: "queued" as const,
+      progress: 15,
+      stage: "Neural Link Established",
+      isFavorite: false,
+      createdAt: new Date(),
+    };
+
+    await db.insert(songsTable).values(remix);
+    scheduleDemoGeneration(id);
+    res.status(201).json(GenerateSongResponse.parse(toApiSong(remix)));
+  } catch (error) {
+    req.log.error({ err: error }, "Failed to initialize remix");
+    res.status(500).json({ error: "Remix synthesis failed" });
+  }
+});
+
 router.get("/audio/:songId", async (req, res) => {
+  const params = GetAudioParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid song id" });
+    return;
+  }
   try {
     const [song] = await db
       .select()
       .from(songsTable)
-      .where(and(eq(songsTable.id, req.params.songId), eq(songsTable.status, "completed")))
+      .where(and(eq(songsTable.id, params.data.songId), eq(songsTable.status, "completed")))
       .limit(1);
     if (!song) {
       res.status(404).json({ error: "Audio is not ready yet" });
@@ -274,7 +458,7 @@ router.get("/audio/:songId", async (req, res) => {
     const sampleRate = 22050;
     const seconds = Math.min(Math.max(song.duration, 15), 45);
     const sampleCount = sampleRate * seconds;
-    const dataSize = sampleCount * 2;
+    const dataSize = sampleCount * 4; // Stereo: 2 channels * 2 bytes
     const wav = Buffer.alloc(44 + dataSize);
     wav.write("RIFF", 0);
     wav.writeUInt32LE(36 + dataSize, 4);
@@ -282,25 +466,234 @@ router.get("/audio/:songId", async (req, res) => {
     wav.write("fmt ", 12);
     wav.writeUInt32LE(16, 16);
     wav.writeUInt16LE(1, 20);
-    wav.writeUInt16LE(1, 22);
+    wav.writeUInt16LE(2, 22); // Channels: 2
     wav.writeUInt32LE(sampleRate, 24);
-    wav.writeUInt32LE(sampleRate * 2, 28);
-    wav.writeUInt16LE(2, 32);
+    wav.writeUInt32LE(sampleRate * 4, 28); // Byte rate
+    wav.writeUInt16LE(4, 32); // Block align
     wav.writeUInt16LE(16, 34);
     wav.write("data", 36);
     wav.writeUInt32LE(dataSize, 40);
     const seed = Math.abs(hashString(song.id));
     const root = 150 + (seed % 120);
+
+    // Setup DSP chain
+    const lpfL = new LowPassFilter(0.4 + (song.bpm / 400));
+    const lpfR = new LowPassFilter(0.4 + (song.bpm / 400));
+    const chorusL = new Chorus();
+    const chorusR = new Chorus();
+    const texture = new GranularTexture();
+    const reverbL = new Reverb();
+    const reverbR = new Reverb();
+    const duckerL = new SidechainDucker();
+    const duckerR = new SidechainDucker();
+    const tiltL = new TiltEQ();
+    const tiltR = new TiltEQ();
+    const vinyl = new VinylCrackle();
+    const widener = new Widener();
+    const limiter = new AionLimiter();
+
+    // Instrument Instances
+    const synth808 = new Aion808();
+    const epiano = new AionEPiano();
+    const pad = new NebulaPad();
+    const lead = new PulseLead();
+    const vox = new AionVox();
+
+    // Drum Machine Instances
+    const kick = new CyberKick();
+    const snare = new NeonSnare();
+    const hats = new GlitchHats();
+
+    // Orchestral Instances
+    const strings = new AionStrings();
+    const brass = new AionBrass();
+    const flute = new AionFlute();
+    const guitar = new AionGuitar();
+    const worldPerc = new WorldPerc();
+
+    // Legendary Library of Congress Instances
+    const strad = new StradivariusNode();
+    const crystalFlute = new CrystalFluteNode();
+    const buchla = new BuchlaNode();
+    const harpsichord = new HarpsichordNode();
+    const khlui = new KhluiNode();
+
+    guitar.init(root * 2, sampleRate);
+
+    // Preset Overrides
+    let drive = 1.8 + (seed % 10) / 5;
+    let revMix = 0.3;
+    let duckMix = 0.7;
+    let stereoWidth = 1.3;
+    let lpfCutoff = 0.4 + (song.bpm / 400);
+    let tilt = 0.5;
+
+    if (song.warmthPreset === "Tube Warmth") {
+      drive = 3.5;
+      lpfCutoff = 0.35;
+      revMix = 0.15;
+      tilt = 0.4;
+    } else if (song.warmthPreset === "Tape Crush") {
+      drive = 7.0;
+      lpfCutoff = 0.25;
+      revMix = 0.2;
+      tilt = 0.35;
+    } else if (song.warmthPreset === "Wide Air") {
+      drive = 1.5;
+      lpfCutoff = 0.6;
+      stereoWidth = 1.8;
+      revMix = 0.4;
+      tilt = 0.65;
+    } else if (song.warmthPreset === "Pumping Space") {
+      drive = 3.0;
+      revMix = 0.7;
+      duckMix = 0.9;
+      stereoWidth = 1.6;
+      tilt = 0.5;
+    } else if (song.warmthPreset === "Subtle Glow") {
+      drive = 2.2;
+      revMix = 0.1;
+      duckMix = 0.2;
+      tilt = 0.55;
+    } else if (song.warmthPreset === "Lo-Fi Hip Hop") {
+      drive = 5.5;
+      lpfCutoff = 0.15;
+      tilt = 0.3;
+      stereoWidth = 0.85;
+      revMix = 0.25;
+      duckMix = 0.1;
+    } else if (song.warmthPreset === "Cinematic Orchestral") {
+      drive = 1.2;
+      lpfCutoff = 0.9;
+      tilt = 0.6;
+      stereoWidth = 1.95;
+      revMix = 0.75;
+      duckMix = 0.0;
+    } else if (song.warmthPreset === "Techno Pulse") {
+      drive = 9.0;
+      lpfCutoff = 0.5;
+      tilt = 0.55;
+      stereoWidth = 1.0;
+      revMix = 0.1;
+      duckMix = 1.0;
+    } else if (song.warmthPreset === "Dream Pop") {
+      drive = 2.5;
+      lpfCutoff = 0.7;
+      tilt = 0.7;
+      stereoWidth = 1.7;
+      revMix = 0.65;
+      duckMix = 0.3;
+    } else if (song.warmthPreset === "Vintage Soul") {
+      drive = 4.0;
+      lpfCutoff = 0.3;
+      tilt = 0.45;
+      stereoWidth = 0.95;
+      revMix = 0.2;
+      duckMix = 0.0;
+    }
+
+    lpfL.setCutoff(lpfCutoff);
+    lpfR.setCutoff(lpfCutoff);
+
     for (let index = 0; index < sampleCount; index += 1) {
       const time = index / sampleRate;
       const pulse = Math.sin(time * Math.PI * 2 * (song.bpm / 60)) > 0.4 ? 1 : 0.35;
+
+      // Sidechain trigger based on pulse peaks (simulated kick)
+      const sidechainTrigger = Math.sin(time * Math.PI * 2 * (song.bpm / 60)) > 0.9 ? 1.0 : 0.0;
+
       const melody = Math.sin(time * Math.PI * 2 * root) * 0.24;
-      const harmony = Math.sin(time * Math.PI * 2 * (root * 1.5)) * 0.12;
-      const bass = Math.sin(time * Math.PI * 2 * (root / 2)) * 0.16;
+      const subBass = Math.sin(time * Math.PI * 2 * (root / 2)) * 0.2;
+      const grit = (time * root * 2 % 1) * 0.05;
+
+      // Add atmospheric texture layer
+      const atmosphere = texture.process(root * 2, sampleRate) * 0.15;
+
+      // Orchestral and Worldwide Layers
+      const stringLayer = strings.process(time % 4, root, 'violin') * 0.2;
+      const brassLayer = brass.process(time % 2, root / 2) * 0.15;
+      const fluteLayer = flute.process(time % 8, root * 2) * 0.1;
+      const guitarLayer = guitar.process() * 0.2;
+
+      // Legendary Instrument Layers
+      const stradLayer = strad.process(time % 4, root) * 0.25;
+      const crystalLayer = crystalFlute.process(time % 6, root * 3) * 0.15;
+      const buchlaLayer = buchla.process(time, root / 4) * 0.3;
+      const harpsichordLayer = harpsichord.process(time % 2, root * 1.5) * 0.15;
+      const khluiLayer = khlui.process(time % 4, root) * 0.1;
+
+      // Neural Vocal Synthesis
+      const vocalFreq = root * 2.1; // Melodic relation
+      const vocalSample = song.lyrics ? vox.process(time % 4, vocalFreq, song.lyrics, sampleRate) : 0;
+
+      // Nebula Drum Machine logic
+      const beatProgress = (time * (song.bpm / 60)) % 1;
+      const step = Math.floor(beatProgress * 4); // 4-step internal sequencer
+      const stepTime = (time % (60 / (song.bpm * 4)));
+
+      const kickTrigger = step === 0;
+      const snareTrigger = step === 2;
+      const hatTrigger = true; // Pulse on every 16th essentially
+
+      const drumSample =
+        kick.process(stepTime, kickTrigger) * 0.8 +
+        snare.process(stepTime, snareTrigger) * 0.5 +
+        hats.process(stepTime, hatTrigger) * 0.2;
+
+      // Generative Instrument Arrangement based on Preset
+      let instrumentSample = 0;
+      if (song.warmthPreset === "Techno Pulse") {
+        instrumentSample = lead.process(time, root * 2) * 0.3 + synth808.process(time % (60/song.bpm), true, 40) * 0.5 + drumSample + vocalSample * 0.2 + buchlaLayer;
+      } else if (song.warmthPreset === "Lo-Fi Hip Hop") {
+        instrumentSample = melody * 0.3 + subBass * 0.4 + drumSample * 0.6 + atmosphere + vocalSample * 0.4 + guitarLayer + harpsichordLayer;
+      } else if (song.warmthPreset === "Vintage Soul") {
+        instrumentSample = epiano.process(time % 2, root) * 0.5 + subBass * 0.5 + drumSample * 0.4 + vocalSample * 0.5 + khluiLayer + worldPerc.process(stepTime, kickTrigger) * 0.25;
+      } else if (song.warmthPreset === "Cinematic Orchestral") {
+        instrumentSample = stradLayer + brassLayer + pad.process(time, root, sampleRate) * 0.4 + vocalSample * 0.3 + crystalLayer;
+      } else if (song.warmthPreset === "Dream Pop") {
+        instrumentSample = pad.process(time, root, sampleRate) * 0.6 + fluteLayer + atmosphere + vocalSample * 0.3 + crystalLayer;
+      } else {
+        instrumentSample = (melody + subBass + grit + atmosphere + drumSample * 0.3 + vocalSample * 0.5 + stradLayer + worldPerc.process(stepTime, kickTrigger) * 0.2);
+      }
+
+      const rawSample = instrumentSample * pulse * 0.7; // Scaled to prevent clipping
+
+      // Apply DSP chain in stereo
+      let procL = chorusL.process(rawSample, 0.4, 0.015);
+      let procR = chorusR.process(rawSample, 0.5, 0.018); // Slightly different rate for natural width
+
+      procL = applySaturation(procL, drive);
+      procR = applySaturation(procR, drive);
+
+      procL = lpfL.process(procL);
+      procR = lpfR.process(procR);
+
+      // Advanced Reverb
+      const revL = reverbL.process(procL, 0.85, 0.4);
+      const revR = reverbR.process(procR, 0.85, 0.4);
+
+      procL += revL * revMix;
+      procR += revR * revMix;
+
+      // Sidechain Ducking (pumping effect)
+      procL = duckerL.process(procL, sidechainTrigger, duckMix);
+      procR = duckerR.process(procR, sidechainTrigger, duckMix);
+
+      // Widening
+      const { l, r } = widener.process(procL, procR, stereoWidth);
+
+      // Final Tone and Limiting
+      let finalL = tiltL.process(l, tilt);
+      let finalR = tiltR.process(r, tilt);
+
+      finalL = limiter.process(applyMasterTone(finalL + getTapeHiss(0.002) + (song.warmthPreset === "Lo-Fi Hip Hop" ? vinyl.process(0.02) : 0)));
+      finalR = limiter.process(applyMasterTone(finalR + getTapeHiss(0.002) + (song.warmthPreset === "Lo-Fi Hip Hop" ? vinyl.process(0.02) : 0)));
+
       const attack = Math.min(1, time * 12);
       const release = Math.min(1, (seconds - time) * 4);
-      const sample = Math.max(-1, Math.min(1, (melody + harmony + bass) * pulse * attack * release));
-      wav.writeInt16LE(Math.round(sample * 32767), 44 + index * 2);
+
+      wav.writeInt16LE(Math.round(finalL * attack * release * 32767), 44 + index * 4);
+      wav.writeInt16LE(Math.round(finalR * attack * release * 32767), 44 + index * 4 + 2);
     }
     res.set({
       "Content-Type": "audio/wav",
@@ -313,6 +706,84 @@ router.get("/audio/:songId", async (req, res) => {
     req.log.error({ err: error }, "Failed to render audio");
     res.status(500).json({ error: "Unable to render audio" });
   }
+});
+
+router.get("/midi/:songId", async (req, res) => {
+  const params = GetMidiParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).send("Invalid song id");
+    return;
+  }
+  try {
+    const [song] = await db
+      .select()
+      .from(songsTable)
+      .where(eq(songsTable.id, params.data.songId))
+      .limit(1);
+
+    if (!song) return res.status(404).send("Not found");
+
+    // Generate symbolic MIDI notes based on song ID and BPM
+    const seed = Math.abs(hashString(song.id));
+    const notes = Array.from({ length: 16 }).map((_, i) => ({
+      pitch: 60 + (seed % 12) + (i % 7), // Basic melodic sequence
+      start: i * 0.5,
+      duration: 0.4
+    }));
+
+    const midi = generateMidiData(notes);
+
+    res.set({
+      "Content-Type": "audio/midi",
+      "Content-Disposition": `attachment; filename="${song.title}.mid"`,
+    });
+    res.send(midi);
+  } catch (error) {
+    res.status(500).send("MIDI synthesis failed");
+  }
+});
+
+const projectStorage = new Map<string, Project>();
+
+router.get("/projects", (req, res) => {
+  res.json(ListProjectsResponse.parse(Array.from(projectStorage.values())));
+});
+
+router.post("/projects", (req, res) => {
+  const body = ProjectInput.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: "Invalid project input" });
+    return;
+  }
+  const id = `project-${Date.now()}`;
+  const project = { id, name: body.data.name || "New Nebula Arrangement", items: body.data.items || [] };
+  projectStorage.set(id, project);
+  res.status(201).json(Project.parse(project));
+});
+
+router.get("/projects/:projectId", (req, res) => {
+  const params = GetProjectParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).send("Invalid project id");
+    return;
+  }
+  const project = projectStorage.get(params.data.projectId);
+  if (!project) return res.status(404).send("Project not found");
+  res.json(Project.parse(project));
+});
+
+router.patch("/projects/:projectId", (req, res) => {
+  const params = UpdateProjectParams.safeParse(req.params);
+  const body = ProjectInput.safeParse(req.body);
+  if (!params.success || !body.success) {
+    res.status(400).json({ error: "Invalid project update" });
+    return;
+  }
+  const project = projectStorage.get(params.data.projectId);
+  if (!project) return res.status(404).send("Project not found");
+  const updated = { ...project, ...body.data };
+  projectStorage.set(params.data.projectId, updated);
+  res.json(Project.parse(updated));
 });
 
 export default router;

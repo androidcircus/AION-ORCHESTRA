@@ -249,6 +249,7 @@ function ArrangementPlayer({ notes, chords, settings }: { notes: CapturedNote[];
     const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AudioContextClass) return;
     const context = new AudioContextClass();
+    if (context.state === 'suspended') context.resume();
     const gain = context.createGain();
     gain.gain.value = 0.08;
     gain.connect(context.destination);

@@ -1,0 +1,50 @@
+name: AION NEBULA - Mobile Sync & Build
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: Install pnpm
+      run: npm install -g pnpm
+
+    - name: Install Dependencies
+      run: pnpm install
+
+    - name: Build AION Core
+      run: pnpm build
+
+    - name: Initialize Nebula Mobile Bridge
+      working-directory: artifacts/aion-orchestra
+      run: |
+        if [ ! -d "android" ]; then npx cap add android; fi
+        npx cap sync android
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'zulu'
+
+    - name: Build Android APK
+      working-directory: artifacts/aion-orchestra/android
+      run: ./gradlew assembleDebug
+
+    - name: Upload Nebula APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: AION-Orchestra-Nebula-Alpha
+        path: artifacts/aion-orchestra/android/app/build/outputs/apk/debug/app-debug.apk

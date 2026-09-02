@@ -22,6 +22,7 @@ import type {
 import type {
   GenerateSongInput,
   HealthStatus,
+  RefineSongInput,
   Song,
   WorkspaceSummary
 } from './api.schemas';
@@ -489,16 +490,99 @@ export type GetWorkspaceSummaryQueryError = ErrorType<unknown>
  * @summary Get workspace summary
  */
 
-export function useGetWorkspaceSummary<TData = Awaited<ReturnType<typeof getWorkspaceSummary>>, TError = ErrorType<unknown>>(
+export const useGetWorkspaceSummary = <TData = Awaited<ReturnType<typeof getWorkspaceSummary>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWorkspaceSummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 
   const queryOptions = getGetWorkspaceSummaryQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
   return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getListPublicFeedUrl = () => {
+  return `/api/feed`
+}
+
+export const listPublicFeed = async (options?: Parameters<typeof customFetch>[1]): Promise<Song[]> => {
+  return customFetch<Song[]>(getListPublicFeedUrl(),
+  {
+    ...options,
+    method: 'GET'
+  }
+);}
+
+export const getListPublicFeedQueryKey = () => {
+  return [`/api/feed`] as const;
+}
+
+export const getListPublicFeedQueryOptions = <TData = Awaited<ReturnType<typeof listPublicFeed>>, TError = ErrorType<unknown>>(options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPublicFeed>>, TError, TData>, request?: SecondParameter<typeof customFetch>}) => {
+  const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getListPublicFeedQueryKey();
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicFeed>>> = ({ signal }) => listPublicFeed({ signal, ...requestOptions });
+  return { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicFeed>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export function useListPublicFeed<TData = Awaited<ReturnType<typeof listPublicFeed>>, TError = ErrorType<unknown>>(options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPublicFeed>>, TError, TData>, request?: SecondParameter<typeof customFetch>}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListPublicFeedQueryOptions(options)
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getRemixSongUrl = (songId: string) => {
+  return `/api/songs/${songId}/remix`
+}
+
+export const remixSong = async (songId: string, options?: Parameters<typeof customFetch>[1]): Promise<Song> => {
+  return customFetch<Song>(getRemixSongUrl(songId),
+  {
+    ...options,
+    method: 'POST'
+  }
+);}
+
+export const getRemixSongMutationOptions = <TError = ErrorType<void>, TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof remixSong>>, TError,{songId: string}, TContext>, request?: SecondParameter<typeof customFetch>}): UseMutationOptions<Awaited<ReturnType<typeof remixSong>>, TError,{songId: string}, TContext> => {
+  const mutationKey = ['remixSong'];
+  const {mutation: mutationOptions, request: requestOptions} = options ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ? options : {...options, mutation: {...options.mutation, mutationKey}} : {mutation: { mutationKey, }, request: undefined};
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof remixSong>>, {songId: string}> = (props) => {
+    const {songId} = props ?? {};
+    return remixSong(songId, requestOptions)
+  }
+  return { mutationFn, ...mutationOptions }
+}
+
+export const useRemixSong = <TError = ErrorType<void>, TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof remixSong>>, TError,{songId: string}, TContext>, request?: SecondParameter<typeof customFetch>}): UseMutationResult<Awaited<ReturnType<typeof remixSong>>, TError, {songId: string}, TContext> => {
+  return useMutation(getRemixSongMutationOptions(options));
+}
+
+export const getRefineSongUrl = (songId: string) => {
+  return `/api/songs/${songId}/refine`
+}
+
+export const refineSong = async (songId: string, refineSongInput: RefineSongInput, options?: Parameters<typeof customFetch>[1]): Promise<Song> => {
+  return customFetch<Song>(getRefineSongUrl(songId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(refineSongInput)
+  }
+);}
+
+export const getRefineSongMutationOptions = <TError = ErrorType<void>, TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refineSong>>, TError,{songId: string, data: BodyType<RefineSongInput>}, TContext>, request?: SecondParameter<typeof customFetch>}): UseMutationOptions<Awaited<ReturnType<typeof refineSong>>, TError,{songId: string, data: BodyType<RefineSongInput>}, TContext> => {
+  const mutationKey = ['refineSong'];
+  const {mutation: mutationOptions, request: requestOptions} = options ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ? options : {...options, mutation: {...options.mutation, mutationKey}} : {mutation: { mutationKey, }, request: undefined};
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof refineSong>>, {songId: string, data: BodyType<RefineSongInput>}> = (props) => {
+    const {songId, data} = props ?? {};
+    return refineSong(songId, data, requestOptions)
+  }
+  return { mutationFn, ...mutationOptions }
+}
+
+export const useRefineSong = <TError = ErrorType<void>, TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refineSong>>, TError,{songId: string, data: BodyType<RefineSongInput>}, TContext>, request?: SecondParameter<typeof customFetch>}): UseMutationResult<Awaited<ReturnType<typeof refineSong>>, TError, {songId: string, data: BodyType<RefineSongInput>}, TContext> => {
+  return useMutation(getRefineSongMutationOptions(options));
 }
 
 

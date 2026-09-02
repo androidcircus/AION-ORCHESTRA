@@ -5,25 +5,14 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { GenerateSongInputModel } from './generateSongInputModel';
 
-export interface GenerateSongInput {
-  /** @minLength 3 */
-  prompt: string;
-  lyrics?: string;
-  /** @minLength 1 */
-  style: string;
-  /**
-     * @minimum 15
-     * @maximum 240
-     */
-  duration: number;
-  instrumental: boolean;
+export interface RefineSongInput {
   /**
      * @minimum 0
      * @maximum 100
      */
-  energy: number;
+  energy?: number;
   warmthPreset?: 'Custom' | 'Tube Warmth' | 'Tape Crush' | 'Wide Air' | 'Subtle Glow' | 'Pumping Space' | 'Lo-Fi Hip Hop' | 'Cinematic Orchestral' | 'Techno Pulse' | 'Dream Pop' | 'Vintage Soul';
-  model: GenerateSongInputModel;
+  style?: string;
+  lyrics?: string;
 }

@@ -9,6 +9,7 @@
 export * from './generateSongInput';
 export * from './generateSongInputModel';
 export * from './healthStatus';
+export * from './refineSongInput';
 export * from './song';
 export * from './songStatus';
 export * from './workspaceSummary';

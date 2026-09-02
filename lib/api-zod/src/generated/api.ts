@@ -35,6 +35,8 @@ export const ListSongsResponseItem = zod.object({
   "progress": zod.number(),
   "stage": zod.string(),
   "model": zod.string(),
+  "energy": zod.number(),
+  "warmthPreset": zod.string(),
   "audioUrl": zod.string().nullable(),
   "coverHue": zod.number(),
   "isFavorite": zod.boolean(),
@@ -65,7 +67,19 @@ export const GenerateSongBody = zod.object({
   "duration": zod.number().min(generateSongBodyDurationMin).max(generateSongBodyDurationMax),
   "instrumental": zod.boolean(),
   "energy": zod.number().min(generateSongBodyEnergyMin).max(generateSongBodyEnergyMax),
-  "model": zod.enum(['AION Demo Engine', 'ACE-Step 1.5', 'YuE'])
+  "warmthPreset": zod.enum(['Custom', 'Tube Warmth', 'Tape Crush', 'Wide Air', 'Subtle Glow', 'Pumping Space', 'Lo-Fi Hip Hop', 'Cinematic Orchestral', 'Techno Pulse', 'Dream Pop', 'Vintage Soul']).optional(),
+  "model": zod.enum(['AION Core (Ideation)', 'Soundraw (Studio Stems)', 'Suno (Vocal Focus)'])
+})
+
+export const RefineSongInput = zod.object({
+  "energy": zod.number().min(generateSongBodyEnergyMin).max(generateSongBodyEnergyMax).optional(),
+  "warmthPreset": zod.enum(['Custom', 'Tube Warmth', 'Tape Crush', 'Wide Air', 'Subtle Glow', 'Pumping Space', 'Lo-Fi Hip Hop', 'Cinematic Orchestral', 'Techno Pulse', 'Dream Pop', 'Vintage Soul']).optional(),
+  "style": zod.string().optional(),
+  "lyrics": zod.string().optional()
+})
+
+export const RefineSongParams = zod.object({
+  "songId": zod.string()
 })
 
 export const GenerateSongResponse = zod.object({
@@ -82,6 +96,8 @@ export const GenerateSongResponse = zod.object({
   "progress": zod.number(),
   "stage": zod.string(),
   "model": zod.string(),
+  "energy": zod.number(),
+  "warmthPreset": zod.string(),
   "audioUrl": zod.string().nullable(),
   "coverHue": zod.number(),
   "isFavorite": zod.boolean(),
@@ -110,6 +126,8 @@ export const GetSongResponse = zod.object({
   "progress": zod.number(),
   "stage": zod.string(),
   "model": zod.string(),
+  "energy": zod.number(),
+  "warmthPreset": zod.string(),
   "audioUrl": zod.string().nullable(),
   "coverHue": zod.number(),
   "isFavorite": zod.boolean(),
@@ -138,6 +156,8 @@ export const ToggleSongFavoriteResponse = zod.object({
   "progress": zod.number(),
   "stage": zod.string(),
   "model": zod.string(),
+  "energy": zod.number(),
+  "warmthPreset": zod.string(),
   "audioUrl": zod.string().nullable(),
   "coverHue": zod.number(),
   "isFavorite": zod.boolean(),
@@ -169,11 +189,47 @@ export const GetWorkspaceSummaryResponse = zod.object({
   "progress": zod.number(),
   "stage": zod.string(),
   "model": zod.string(),
+  "energy": zod.number(),
+  "warmthPreset": zod.string(),
   "audioUrl": zod.string().nullable(),
   "coverHue": zod.number(),
   "isFavorite": zod.boolean(),
   "createdAt": zod.coerce.date()
 }),zod.null()])
+})
+
+export const TimelineItem = zod.object({
+  "songId": zod.string(),
+  "startTime": zod.number(),
+  "duration": zod.number()
+})
+
+export const Project = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "items": zod.array(TimelineItem)
+})
+
+export const ProjectInput = zod.object({
+  "name": zod.string().optional(),
+  "items": zod.array(TimelineItem).optional()
+})
+
+export const ListProjectsResponse = zod.array(Project)
+export const GetProjectParams = zod.object({
+  "projectId": zod.string()
+})
+export const UpdateProjectParams = zod.object({
+  "projectId": zod.string()
+})
+export const RemixSongParams = zod.object({
+  "songId": zod.string()
+})
+export const GetAudioParams = zod.object({
+  "songId": zod.string()
+})
+export const GetMidiParams = zod.object({
+  "songId": zod.string()
 })
 
 

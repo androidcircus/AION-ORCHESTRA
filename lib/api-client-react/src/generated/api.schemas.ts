@@ -45,9 +45,26 @@ export type GenerateSongInputModel = typeof GenerateSongInputModel[keyof typeof 
 
 
 export const GenerateSongInputModel = {
-  AION_Demo_Engine: 'AION Demo Engine',
-  'ACE-Step_15': 'ACE-Step 1.5',
-  YuE: 'YuE',
+  AION_Core_Ideation: 'AION Core (Ideation)',
+  Soundraw_Studio_Stems: 'Soundraw (Studio Stems)',
+  Suno_Vocal_Focus: 'Suno (Vocal Focus)',
+} as const;
+
+export type GenerateSongInputWarmthPreset = typeof GenerateSongInputWarmthPreset[keyof typeof GenerateSongInputWarmthPreset];
+
+
+export const GenerateSongInputWarmthPreset = {
+  Custom: 'Custom',
+  Tube_Warmth: 'Tube Warmth',
+  Tape_Crush: 'Tape Crush',
+  Wide_Air: 'Wide Air',
+  Subtle_Glow: 'Subtle Glow',
+  Pumping_Space: 'Pumping Space',
+  Lo_Fi_Hip_Hop: 'Lo-Fi Hip Hop',
+  Cinematic_Orchestral: 'Cinematic Orchestral',
+  Techno_Pulse: 'Techno Pulse',
+  Dream_Pop: 'Dream Pop',
+  Vintage_Soul: 'Vintage Soul',
 } as const;
 
 export interface GenerateSongInput {
@@ -67,7 +84,19 @@ export interface GenerateSongInput {
      * @maximum 100
      */
   energy: number;
+  warmthPreset?: GenerateSongInputWarmthPreset;
   model: GenerateSongInputModel;
+}
+
+export interface RefineSongInput {
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  energy?: number;
+  warmthPreset?: GenerateSongInputWarmthPreset;
+  style?: string;
+  lyrics?: string;
 }
 
 export interface WorkspaceSummary {

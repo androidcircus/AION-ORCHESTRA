@@ -1,6 +1,6 @@
 import { createInsertSchema } from "drizzle-zod";
 import { boolean, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const songsTable = pgTable("songs", {
   id: text("id").primaryKey(),
@@ -10,12 +10,14 @@ export const songsTable = pgTable("songs", {
   style: text("style").notNull(),
   tags: text("tags").array().notNull().default([]),
   duration: integer("duration").notNull(),
+  energy: integer("energy").notNull().default(68),
   bpm: integer("bpm").notNull(),
   musicalKey: text("musical_key").notNull(),
   status: text("status").notNull().default("completed"),
   progress: integer("progress").notNull().default(100),
   stage: text("stage").notNull().default("Ready to play"),
   model: text("model").notNull(),
+  warmthPreset: text("warmth_preset").notNull().default("Custom"),
   audioUrl: text("audio_url"),
   coverHue: integer("cover_hue").notNull().default(280),
   isFavorite: boolean("is_favorite").notNull().default(false),

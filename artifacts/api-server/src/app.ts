@@ -31,4 +31,16 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
 
+// CMO Global Diagnostic Middleware
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const { cmo } = require("./lib/cmo");
+  const report = cmo.diagnose(err, "Express Middleware", "high");
+
+  res.status(500).json({
+    error: "Internal System Anomaly",
+    reportId: report.id,
+    cmoStatus: "Repair Swarm Deployed"
+  });
+});
+
 export default app;

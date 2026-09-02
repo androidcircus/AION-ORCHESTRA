@@ -10,7 +10,7 @@ export type GenerateSongInputModel = typeof GenerateSongInputModel[keyof typeof 
 
 
 export const GenerateSongInputModel = {
-  AION_Demo_Engine: 'AION Demo Engine',
-  'ACE-Step_15': 'ACE-Step 1.5',
-  YuE: 'YuE',
+  AION_Core_Ideation: 'AION Core (Ideation)',
+  Soundraw_Studio_Stems: 'Soundraw (Studio Stems)',
+  Suno_Vocal_Focus: 'Suno (Vocal Focus)',
 } as const;
